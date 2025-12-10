@@ -196,6 +196,7 @@ export default function OrderPage() {
       deliveryFee: selectedPharmacy?.deliveryFee || 25,
       subtotal: cartTotal,
       total: finalTotal,
+      paymentMethod: paymentMethod, // "online" or "cod"
     };
     localStorage.setItem("doseupp_current_order", JSON.stringify(orderData));
     

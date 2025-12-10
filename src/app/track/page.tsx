@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   MapPin, Phone, Clock, Package, Truck, Store, 
   CheckCircle2, ChevronRight, User, MessageSquare,
-  Brain, Sparkles, Shield, Fingerprint, PartyPopper, X, Star
+  Brain, Sparkles, Shield, Fingerprint, PartyPopper, X, Star, ShoppingCart
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -32,17 +32,18 @@ type OrderData = {
   deliveryFee: number;
   subtotal: number;
   total: number;
+  paymentMethod?: "online" | "cod";
 };
 
-const trackingSteps = [
+const getTrackingSteps = (isCOD: boolean) => [
   { id: 1, title: "Order Placed", description: "Your order has been received", icon: Package, time: "2:30 PM" },
   { id: 2, title: "AI Pharmacy Selection", description: "Finding nearest pharmacy with stock", icon: Brain, time: "2:31 PM" },
   { id: 3, title: "Order Confirmed", description: "Pharmacy has confirmed your order", icon: CheckCircle2, time: "2:32 PM" },
   { id: 4, title: "Preparing Order", description: "Pharmacy is preparing your medicines", icon: Store, time: "2:35 PM" },
   { id: 5, title: "Rider Assigned", description: "Rider is on the way to pharmacy", icon: User, time: "2:36 PM" },
   { id: 6, title: "Out for Delivery", description: "Rider has picked up your order", icon: Truck, time: "2:38 PM" },
-  { id: 7, title: "Doorstep Verification", description: "Verify OTP to receive order", icon: Fingerprint, time: "2:41 PM" },
-  { id: 8, title: "Delivered", description: "Order delivered successfully", icon: PartyPopper, time: "2:42 PM" },
+  ...(isCOD ? [{ id: 7, title: "Doorstep Verification", description: "Verify OTP to receive order", icon: Fingerprint, time: "2:41 PM" }] : []),
+  { id: isCOD ? 8 : 7, title: "Delivered", description: "Order delivered successfully", icon: PartyPopper, time: isCOD ? "2:42 PM" : "2:41 PM" },
 ];
 
 const rider = {
@@ -65,36 +66,67 @@ function TrackContent() {
   const [verifying, setVerifying] = useState(false);
   const [rating, setRating] = useState(0);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [hasOrder, setHasOrder] = useState<boolean | null>(null);
   const correctOTP = "1234";
+
+  const isCOD = orderData?.paymentMethod === "cod";
+  const trackingSteps = getTrackingSteps(isCOD);
+  const maxStep = isCOD ? 8 : 7;
 
   useEffect(() => {
     const storedOrder = localStorage.getItem("doseupp_current_order");
     if (storedOrder) {
       const parsed = JSON.parse(storedOrder);
       setOrderData(parsed);
+      setHasOrder(true);
+    } else {
+      setHasOrder(false);
     }
   }, []);
 
   useEffect(() => {
+    // Only run tracking animation if there's an order
+    if (!hasOrder) return;
+
     const interval = setInterval(() => {
       setCurrentStep(prev => {
-        if (prev < 6) return prev + 1;
-        if (prev === 6) {
-          setTimeout(() => setShowVerificationPopup(true), 1000);
-          clearInterval(interval);
+        // For COD: stop at step 6 and show verification popup
+        // For online: go directly to step 7 (delivered)
+        if (isCOD) {
+          if (prev < 6) return prev + 1;
+          if (prev === 6) {
+            setTimeout(() => setShowVerificationPopup(true), 1000);
+            clearInterval(interval);
+          }
+          return prev;
+        } else {
+          // For online payment, skip verification
+          if (prev < 6) return prev + 1;
+          if (prev === 6) {
+            clearInterval(interval);
+            // Auto complete after a brief pause
+            setTimeout(() => {
+              setCurrentStep(7);
+              setShowDeliveredPopup(true);
+              localStorage.removeItem("doseupp_current_order");
+            }, 2000);
+          }
+          return prev;
         }
-        return prev;
       });
     }, 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [hasOrder, isCOD]);
 
   useEffect(() => {
-    const progressMap: Record<number, number> = { 1: 5, 2: 15, 3: 28, 4: 42, 5: 55, 6: 70, 7: 88, 8: 100 };
+    // Progress mapping based on payment method
+    const progressMap: Record<number, number> = isCOD
+      ? { 1: 5, 2: 15, 3: 28, 4: 42, 5: 55, 6: 70, 7: 88, 8: 100 }
+      : { 1: 8, 2: 20, 3: 35, 4: 50, 5: 70, 6: 85, 7: 100 };
     setProgress(progressMap[currentStep] || 0);
 
-    if (currentStep >= 6 && currentStep < 8) {
+    if (currentStep >= 6 && currentStep < maxStep) {
       const riderInterval = setInterval(() => {
         setRiderLocation(prev => ({
           x: Math.min(prev.x + 1.5, 85),
@@ -103,7 +135,7 @@ function TrackContent() {
       }, 150);
       return () => clearInterval(riderInterval);
     }
-  }, [currentStep]);
+  }, [currentStep, isCOD, maxStep]);
 
   const handleOTPChange = (index: number, value: string) => {
     if (value.length > 1) return;
@@ -132,6 +164,69 @@ function TrackContent() {
     }
     setVerifying(false);
   };
+
+  // Show loading while checking for order
+  if (hasOrder === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <motion.div 
+          className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        />
+      </div>
+    );
+  }
+
+  // Show empty state if no order exists
+  if (!hasOrder) {
+    return (
+      <div className="min-h-screen bg-background mesh-gradient">
+        <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <Link href="/">
+              <DoseuppLogo size="md" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <Link href="/order">
+                <Button className="btn-primary-gradient font-semibold">
+                  Order Now
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        <div className="pt-28 pb-16 px-6 flex items-center justify-center min-h-screen">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center max-w-md"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6"
+            >
+              <Package className="w-12 h-12 text-muted-foreground" />
+            </motion.div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">No Active Orders</h1>
+            <p className="text-muted-foreground mb-6">
+              You don't have any orders to track right now. Place an order to see live tracking.
+            </p>
+            <Link href="/order">
+              <Button className="btn-primary-gradient font-bold px-8 py-6">
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Order Medicines
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   const orderId = searchParams.get("orderId") || orderData?.orderId || "DU12345678";
   const orderItems = orderData?.items || [];
@@ -424,7 +519,7 @@ function TrackContent() {
                     </div>
 
                     <AnimatePresence>
-                      {currentStep === 6 && (
+                      {currentStep === 6 && isCOD && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
@@ -495,7 +590,7 @@ function TrackContent() {
                             }}
                             className={`w-10 h-10 rounded-xl flex items-center justify-center z-10 ${
                               isCompleted || isCurrent
-                                ? step.id === 8 && isCompleted 
+                                ? step.id === maxStep && isCompleted 
                                   ? "bg-gradient-to-br from-green-500 to-emerald-500"
                                   : "bg-gradient-to-br from-primary to-accent"
                                 : "bg-muted border border-border"
