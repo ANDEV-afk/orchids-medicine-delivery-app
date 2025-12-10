@@ -630,11 +630,6 @@ export default function Home() {
           
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link href="/pharmacy/login">
-              <Button variant="ghost" className="text-muted-foreground hover:text-primary hidden sm:flex font-medium">
-                Login
-              </Button>
-            </Link>
             <Link href="/pharmacy/onboarding">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white hidden sm:flex font-medium">
                 <Store className="w-4 h-4 mr-2" />

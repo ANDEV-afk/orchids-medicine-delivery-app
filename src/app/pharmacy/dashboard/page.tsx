@@ -6,10 +6,9 @@ import {
   Package, Clock, CheckCircle2, XCircle, 
   DollarSign, ShoppingBag, Users, Settings, Bell, Search,
   ChevronRight, X, Truck, MapPin, Phone, Bike,
-  Navigation, Star, LogOut, User, Plus, AlertTriangle
+  Navigation, Star, User, Plus, AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DoseuppLogo } from "@/components/DoseuppLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { getPharmacyById, type Pharmacy, updatePharmacyInventory } from "@/lib/pharmacy-store";
+import { getPharmacyById, type Pharmacy, updatePharmacyInventory, getPharmacies } from "@/lib/pharmacy-store";
 import { medicines } from "@/lib/medicines-store";
 
 const riders = [
@@ -67,7 +66,6 @@ function generateOrdersForPharmacy(pharmacyName: string): Order[] {
 }
 
 export default function PharmacyDashboard() {
-  const router = useRouter();
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -76,34 +74,20 @@ export default function PharmacyDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRiderSelect, setShowRiderSelect] = useState(false);
   const [selectedRider, setSelectedRider] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [showInventoryModal, setShowInventoryModal] = useState(false);
 
   useEffect(() => {
-    const userType = localStorage.getItem("doseupp_user_type");
-    const pharmacyId = localStorage.getItem("doseupp_pharmacy_id");
-    
-    if (userType !== "pharmacy" || !pharmacyId) {
-      setIsAuthenticated(false);
-      setIsLoading(false);
-      return;
-    }
-    
-    const pharmacyData = getPharmacyById(pharmacyId);
-    if (pharmacyData) {
-      setPharmacy(pharmacyData);
-      setOrders(generateOrdersForPharmacy(pharmacyData.name));
+    // Use first pharmacy as default demo pharmacy
+    const defaultPharmacy = getPharmacies()[0];
+    if (defaultPharmacy) {
+      setPharmacy(defaultPharmacy);
+      setOrders(generateOrdersForPharmacy(defaultPharmacy.name));
       setNotifications([
         { id: 1, type: "order", message: `New order received`, time: "2 min ago", read: false },
         { id: 2, type: "rider", message: "Rajesh Kumar is now available", time: "5 min ago", read: false },
         { id: 3, type: "stock", message: "Some items running low on stock", time: "10 min ago", read: false },
       ]);
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
     }
-    setIsLoading(false);
   }, []);
 
   const filteredOrders = activeTab === "all" 
@@ -136,13 +120,6 @@ export default function PharmacyDashboard() {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("doseupp_user_type");
-    localStorage.removeItem("doseupp_pharmacy_id");
-    localStorage.removeItem("doseupp_pharmacy_name");
-    router.push("/");
-  };
-
   const getRiderForOrder = (riderId: string | null) => {
     if (!riderId) return null;
     return riders.find(r => r.id === riderId);
@@ -162,40 +139,10 @@ export default function PharmacyDashboard() {
     });
   };
 
-  if (isLoading) {
+  if (!pharmacy) {
     return (
       <div className="min-h-screen bg-background mesh-gradient flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !pharmacy) {
-    return (
-      <div className="min-h-screen bg-background mesh-gradient flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass-card rounded-3xl p-8 max-w-md text-center"
-        >
-          <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center mx-auto mb-4">
-            <XCircle className="w-8 h-8 text-destructive" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2 text-foreground">Access Denied</h2>
-          <p className="text-muted-foreground mb-6">Please login as a pharmacy to access the dashboard.</p>
-          <div className="flex flex-col gap-3">
-            <Link href="/pharmacy/login">
-              <Button className="w-full btn-primary-gradient font-semibold">
-                Login as Pharmacy
-              </Button>
-            </Link>
-            <Link href="/">
-              <Button variant="outline" className="w-full border-border text-foreground">
-                Go to Home
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
       </div>
     );
   }
@@ -272,14 +219,6 @@ export default function PharmacyDashboard() {
             </div>
             <Button variant="ghost" size="sm" className="text-foreground hover:bg-muted">
               <Settings className="w-5 h-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-destructive hover:bg-destructive/10"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-5 h-5" />
             </Button>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
               {pharmacy.name.charAt(0)}
