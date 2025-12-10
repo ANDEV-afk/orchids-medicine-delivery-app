@@ -13,39 +13,25 @@ import { Button } from "@/components/ui/button";
 import { DoseuppLogo } from "@/components/DoseuppLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-const ORDER_ITEMS = [
-  { name: "Paracetamol 500mg", brand: "Crocin", quantity: 2, price: 25, image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100&h=100&fit=crop" },
-  { name: "Vitamin D3 60000IU", brand: "Drise", quantity: 1, price: 120, image: "https://images.unsplash.com/photo-1559757175-7cb057fba93c?w=100&h=100&fit=crop" },
-  { name: "Azithromycin 500mg", brand: "Zithromax", quantity: 1, price: 95, image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=100&h=100&fit=crop" },
-];
+type OrderItem = {
+  name: string;
+  brand: string;
+  quantity: number;
+  price: number;
+  image: string;
+};
 
-const DELIVERY_FEE = 25;
-const SUBTOTAL = ORDER_ITEMS.reduce((sum, item) => sum + item.price * item.quantity, 0);
-const TOTAL = SUBTOTAL + DELIVERY_FEE;
-
-const orderDetails = {
-  orderId: "DU12345678",
-  placedAt: "2:30 PM",
-  estimatedDelivery: "2:42 PM",
-  items: ORDER_ITEMS,
+type OrderData = {
+  orderId: string;
+  items: OrderItem[];
   pharmacy: {
-    name: "Apollo Pharmacy - Connaught Place",
-    address: "Block A-12, Inner Circle, Connaught Place",
-    phone: "+91 9876543210",
-    rating: 4.9,
-  },
-  delivery: {
-    address: "Connaught Place, New Delhi - 110001",
-    fee: DELIVERY_FEE,
-  },
-  rider: {
-    name: "Rahul Kumar",
-    phone: "+91 9876543211",
-    rating: 4.9,
-    deliveries: 1250,
-    vehicle: "Honda Activa",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
-  },
+    name: string;
+    address: string;
+  };
+  deliveryAddress: string;
+  deliveryFee: number;
+  subtotal: number;
+  total: number;
 };
 
 const trackingSteps = [
@@ -59,6 +45,15 @@ const trackingSteps = [
   { id: 8, title: "Delivered", description: "Order delivered successfully", icon: PartyPopper, time: "2:42 PM" },
 ];
 
+const rider = {
+  name: "Rahul Kumar",
+  phone: "+91 9876543211",
+  rating: 4.9,
+  deliveries: 1250,
+  vehicle: "Honda Activa",
+  image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+};
+
 function TrackContent() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
@@ -69,7 +64,16 @@ function TrackContent() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [verifying, setVerifying] = useState(false);
   const [rating, setRating] = useState(0);
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
   const correctOTP = "1234";
+
+  useEffect(() => {
+    const storedOrder = localStorage.getItem("doseupp_current_order");
+    if (storedOrder) {
+      const parsed = JSON.parse(storedOrder);
+      setOrderData(parsed);
+    }
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -124,11 +128,18 @@ function TrackContent() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setCurrentStep(8);
       setShowDeliveredPopup(true);
+      localStorage.removeItem("doseupp_current_order");
     }
     setVerifying(false);
   };
 
-  const orderId = searchParams.get("orderId") || orderDetails.orderId;
+  const orderId = searchParams.get("orderId") || orderData?.orderId || "DU12345678";
+  const orderItems = orderData?.items || [];
+  const subtotal = orderData?.subtotal || 0;
+  const deliveryFee = orderData?.deliveryFee || 25;
+  const total = orderData?.total || 0;
+  const pharmacyName = orderData?.pharmacy?.name || "Apollo Pharmacy";
+  const deliveryAddress = orderData?.deliveryAddress || "Connaught Place, New Delhi";
 
   return (
     <div className="min-h-screen bg-background mesh-gradient">
@@ -298,7 +309,7 @@ function TrackContent() {
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ repeat: Infinity, duration: 2 }}
                       >
-                        {orderDetails.estimatedDelivery}
+                        12 min
                       </motion.p>
                     </div>
                     <motion.div 
@@ -343,7 +354,7 @@ function TrackContent() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">From</p>
-                        <p className="font-medium text-sm line-clamp-1 text-foreground">{orderDetails.pharmacy.name.split(' - ')[0]}</p>
+                        <p className="font-medium text-sm line-clamp-1 text-foreground">{pharmacyName.split(' - ')[0]}</p>
                       </div>
                     </motion.div>
                     <motion.div 
@@ -355,7 +366,7 @@ function TrackContent() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">To</p>
-                        <p className="font-medium text-sm line-clamp-1 text-foreground">{orderDetails.delivery.address.split(',')[0]}</p>
+                        <p className="font-medium text-sm line-clamp-1 text-foreground">{deliveryAddress.split(',')[0]}</p>
                       </div>
                     </motion.div>
                   </div>
@@ -386,17 +397,17 @@ function TrackContent() {
                         whileHover={{ scale: 1.1, rotate: 5 }}
                       >
                         <img 
-                          src={orderDetails.rider.image} 
-                          alt={orderDetails.rider.name}
+                          src={rider.image} 
+                          alt={rider.name}
                           className="w-full h-full object-cover"
                         />
                       </motion.div>
                       <div className="flex-1">
-                        <p className="font-bold text-foreground">{orderDetails.rider.name}</p>
+                        <p className="font-bold text-foreground">{rider.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          ⭐ {orderDetails.rider.rating} • {orderDetails.rider.deliveries} deliveries
+                          ⭐ {rider.rating} • {rider.deliveries} deliveries
                         </p>
-                        <p className="text-xs text-muted-foreground">{orderDetails.rider.vehicle}</p>
+                        <p className="text-xs text-muted-foreground">{rider.vehicle}</p>
                       </div>
                       <div className="flex gap-2">
                         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -543,43 +554,52 @@ function TrackContent() {
               >
                 <h3 className="font-bold mb-4 text-foreground">Order Summary</h3>
                 <div className="space-y-3 mb-4">
-                  {ORDER_ITEMS.map((item, i) => (
+                  {orderItems.length > 0 ? (
+                    orderItems.map((item, i) => (
+                      <motion.div 
+                        key={i} 
+                        className="flex items-center gap-3"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        whileHover={{ x: 4 }}
+                      >
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">{item.brand} × {item.quantity}</p>
+                        </div>
+                        <span className="font-semibold text-foreground">₹{item.price * item.quantity}</span>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      No order data available
+                    </div>
+                  )}
+                </div>
+                {orderItems.length > 0 && (
+                  <div className="space-y-2 pt-4 border-t border-border">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-foreground">₹{subtotal}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Delivery Fee</span>
+                      <span className="text-foreground">₹{deliveryFee}</span>
+                    </div>
                     <motion.div 
-                      key={i} 
-                      className="flex items-center gap-3"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      whileHover={{ x: 4 }}
+                      className="flex justify-between font-bold text-lg pt-2"
+                      whileHover={{ scale: 1.02 }}
                     >
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.brand} × {item.quantity}</p>
-                      </div>
-                      <span className="font-semibold text-foreground">₹{item.price * item.quantity}</span>
+                      <span className="text-foreground">Total</span>
+                      <span className="text-primary">₹{total}</span>
                     </motion.div>
-                  ))}
-                </div>
-                <div className="space-y-2 pt-4 border-t border-border">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">₹{SUBTOTAL}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Delivery Fee</span>
-                    <span className="text-foreground">₹{DELIVERY_FEE}</span>
-                  </div>
-                  <motion.div 
-                    className="flex justify-between font-bold text-lg pt-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <span className="text-foreground">Total</span>
-                    <span className="text-primary">₹{TOTAL}</span>
-                  </motion.div>
-                </div>
+                )}
               </motion.div>
 
               <Link href="/order">

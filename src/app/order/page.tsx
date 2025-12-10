@@ -176,7 +176,28 @@ export default function OrderPage() {
 
   const handlePlaceOrder = async () => {
     setOrderStatus("processing");
-    setOrderId(`DU${Date.now().toString().slice(-8)}`);
+    const newOrderId = `DU${Date.now().toString().slice(-8)}`;
+    setOrderId(newOrderId);
+    
+    const orderData = {
+      orderId: newOrderId,
+      items: cart.map(item => ({
+        name: item.name,
+        brand: item.brand,
+        quantity: item.quantity,
+        price: item.price,
+        image: item.image,
+      })),
+      pharmacy: {
+        name: selectedPharmacy?.name || "Apollo Pharmacy",
+        address: selectedPharmacy?.area || "Connaught Place",
+      },
+      deliveryAddress: selectedAddress.address,
+      deliveryFee: selectedPharmacy?.deliveryFee || 25,
+      subtotal: cartTotal,
+      total: finalTotal,
+    };
+    localStorage.setItem("doseupp_current_order", JSON.stringify(orderData));
     
     await new Promise(resolve => setTimeout(resolve, 1500));
     setOrderStatus("pharmacy_selected");
