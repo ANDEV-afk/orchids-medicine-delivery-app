@@ -5,7 +5,8 @@ import { motion, useScroll, useTransform, useInView, AnimatePresence } from "fra
 import { 
   Truck, Clock, Shield, Store, ChevronRight, Search, MapPin, 
   Star, Zap, Brain, BadgeCheck, TrendingUp, Package, Plus, Heart,
-  Sparkles, Rocket, Users, Award, ShoppingCart, Check
+  Sparkles, Rocket, Users, Award, ShoppingCart, Check, CreditCard,
+  Fingerprint, PartyPopper, Navigation
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -71,122 +72,519 @@ function AnimatedSection({ children, className = "" }: { children: React.ReactNo
   );
 }
 
+type AnimationPhase = "browsing" | "selecting" | "adding" | "cart" | "checkout" | "processing" | "tracking" | "delivered";
+
 function MobilePhoneAnimation() {
-  const [currentMedicine, setCurrentMedicine] = useState(0);
+  const [phase, setPhase] = useState<AnimationPhase>("browsing");
+  const [selectedMedicine, setSelectedMedicine] = useState(0);
   const [cartItems, setCartItems] = useState<number[]>([]);
-  const [showAddedToast, setShowAddedToast] = useState(false);
-  const demoMedicines = medicines.slice(0, 4);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationText, setNotificationText] = useState("");
+  const [trackingProgress, setTrackingProgress] = useState(0);
+  const demoMedicines = medicines.slice(0, 3);
+  
+  const cartTotal = cartItems.reduce((sum, id) => sum + (medicines.find(m => m.id === id)?.price || 0), 0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMedicine(prev => {
-        const next = (prev + 1) % demoMedicines.length;
-        setCartItems(items => [...items, demoMedicines[next].id]);
-        setShowAddedToast(true);
-        setTimeout(() => setShowAddedToast(false), 1500);
-        return next;
-      });
-    }, 3000);
+    const runAnimation = async () => {
+      await new Promise(r => setTimeout(r, 1500));
+      
+      for (let i = 0; i < 3; i++) {
+        setPhase("selecting");
+        setSelectedMedicine(i);
+        await new Promise(r => setTimeout(r, 800));
+        
+        setPhase("adding");
+        setCartItems(prev => [...prev, demoMedicines[i].id]);
+        setNotificationText(`${demoMedicines[i].name.split(' ')[0]} added!`);
+        setShowNotification(true);
+        await new Promise(r => setTimeout(r, 600));
+        setShowNotification(false);
+        await new Promise(r => setTimeout(r, 400));
+        
+        setPhase("browsing");
+        await new Promise(r => setTimeout(r, 600));
+      }
+
+      setPhase("cart");
+      await new Promise(r => setTimeout(r, 1500));
+      
+      setPhase("checkout");
+      await new Promise(r => setTimeout(r, 1200));
+
+      setPhase("processing");
+      await new Promise(r => setTimeout(r, 2000));
+
+      setPhase("tracking");
+      for (let p = 0; p <= 100; p += 5) {
+        setTrackingProgress(p);
+        await new Promise(r => setTimeout(r, 100));
+      }
+      await new Promise(r => setTimeout(r, 500));
+
+      setPhase("delivered");
+      await new Promise(r => setTimeout(r, 3000));
+
+      setCartItems([]);
+      setTrackingProgress(0);
+      setPhase("browsing");
+    };
+
+    runAnimation();
+    const interval = setInterval(runAnimation, 22000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="relative mx-auto w-[280px] h-[560px]">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-[3rem] blur-2xl" />
-      <div className="relative w-full h-full bg-card border-4 border-border rounded-[2.5rem] overflow-hidden shadow-2xl">
-        <div className="h-8 bg-card border-b border-border flex items-center justify-center">
-          <div className="w-20 h-5 bg-muted rounded-full" />
+    <div className="relative mx-auto w-[300px] h-[600px]">
+      <motion.div 
+        className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-[3rem] blur-3xl"
+        animate={{ 
+          scale: [1, 1.05, 1],
+          opacity: [0.5, 0.7, 0.5]
+        }}
+        transition={{ repeat: Infinity, duration: 4 }}
+      />
+      
+      <div className="relative w-full h-full bg-card border-4 border-zinc-800 dark:border-zinc-600 rounded-[2.5rem] overflow-hidden shadow-2xl">
+        <div className="h-7 bg-zinc-900 flex items-center justify-center relative">
+          <div className="absolute left-1/2 -translate-x-1/2 w-24 h-6 bg-zinc-900 rounded-b-xl flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-zinc-800 border-2 border-zinc-700" />
+          </div>
         </div>
         
-        <div className="p-3 border-b border-border flex items-center justify-between bg-card">
+        <div className="h-14 px-4 border-b border-border flex items-center justify-between bg-card">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Package className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-sm text-foreground">Doseupp</span>
+            <motion.div 
+              className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center"
+              animate={{ rotate: phase === "processing" ? 360 : 0 }}
+              transition={{ repeat: phase === "processing" ? Infinity : 0, duration: 1, ease: "linear" }}
+            >
+              <Package className="w-5 h-5 text-white" />
+            </motion.div>
+            <span className="font-bold text-foreground">Doseupp</span>
           </div>
-          <div className="relative">
-            <ShoppingCart className="w-5 h-5 text-muted-foreground" />
+          <motion.div 
+            className="relative cursor-pointer"
+            animate={{ scale: cartItems.length > 0 ? [1, 1.2, 1] : 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ShoppingCart className="w-6 h-6 text-foreground" />
             <AnimatePresence>
               {cartItems.length > 0 && (
                 <motion.span 
-                  key={cartItems.length}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 w-4 h-4 bg-accent text-white text-[10px] rounded-full flex items-center justify-center font-bold"
+                  exit={{ scale: 0 }}
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-white text-[11px] rounded-full flex items-center justify-center font-bold"
                 >
                   {cartItems.length}
                 </motion.span>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
         </div>
 
-        <div className="p-3 space-y-3 bg-background h-[calc(100%-6rem)] overflow-hidden">
-          <div className="bg-muted rounded-lg p-2 flex items-center gap-2">
-            <Search className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Search medicines...</span>
-          </div>
-
-          <div className="space-y-2">
-            {demoMedicines.map((med, index) => (
+        <div className="h-[calc(100%-7rem)] overflow-hidden bg-background relative">
+          <AnimatePresence mode="wait">
+            {(phase === "browsing" || phase === "selecting" || phase === "adding") && (
               <motion.div
-                key={med.id}
-                animate={{
-                  scale: currentMedicine === index ? 1.02 : 1,
-                  borderColor: currentMedicine === index ? "hsl(var(--primary))" : "hsl(var(--border))"
-                }}
-                className="bg-card rounded-xl p-2 border-2 transition-all"
+                key="browse"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                className="p-3 h-full"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    <img src={med.image} alt={med.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-muted-foreground">{med.brand}</p>
-                    <p className="text-xs font-semibold text-foreground truncate">{med.name}</p>
-                    <p className="text-xs font-bold text-primary">₹{med.price}</p>
-                  </div>
-                  <motion.button
-                    animate={{
-                      backgroundColor: cartItems.includes(med.id) ? "hsl(var(--primary))" : "hsl(var(--muted))"
-                    }}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                <div className="bg-muted rounded-xl p-2.5 flex items-center gap-2 mb-3">
+                  <Search className="w-4 h-4 text-muted-foreground" />
+                  <motion.span 
+                    className="text-xs text-muted-foreground"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
                   >
-                    {cartItems.includes(med.id) ? (
-                      <Check className="w-4 h-4 text-white" />
-                    ) : (
-                      <Plus className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </motion.button>
+                    Search medicines...
+                  </motion.span>
+                </div>
+
+                <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">POPULAR MEDICINES</p>
+                
+                <div className="space-y-2">
+                  {demoMedicines.map((med, index) => (
+                    <motion.div
+                      key={med.id}
+                      animate={{
+                        scale: selectedMedicine === index && phase === "selecting" ? 1.03 : 1,
+                        borderColor: selectedMedicine === index && phase === "selecting" 
+                          ? "hsl(var(--primary))" 
+                          : cartItems.includes(med.id) 
+                            ? "hsl(var(--accent))" 
+                            : "hsl(var(--border))"
+                      }}
+                      className="bg-card rounded-xl p-3 border-2 transition-all shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <img src={med.image} alt={med.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-muted-foreground uppercase">{med.brand}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{med.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-primary">₹{med.price}</p>
+                            <p className="text-[10px] text-muted-foreground line-through">₹{med.originalPrice}</p>
+                          </div>
+                        </div>
+                        <motion.div
+                          animate={{
+                            scale: selectedMedicine === index && phase === "adding" ? [1, 1.3, 1] : 1,
+                            backgroundColor: cartItems.includes(med.id) ? "hsl(var(--primary))" : "hsl(var(--muted))"
+                          }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        >
+                          {cartItems.includes(med.id) ? (
+                            <Check className="w-4 h-4 text-white" />
+                          ) : (
+                            <Plus className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
-            ))}
-          </div>
-        </div>
+            )}
 
-        <AnimatePresence>
-          {showAddedToast && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute bottom-20 left-3 right-3 bg-primary text-white p-3 rounded-xl flex items-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              <span className="text-xs font-medium">Added to cart!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {phase === "cart" && (
+              <motion.div
+                key="cart"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                className="p-3 h-full flex flex-col"
+              >
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4" /> Your Cart
+                </h3>
+                
+                <div className="flex-1 space-y-2 overflow-auto">
+                  {cartItems.map((id, i) => {
+                    const med = medicines.find(m => m.id === id);
+                    if (!med) return null;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="bg-card rounded-xl p-2 border border-border flex items-center gap-2"
+                      >
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
+                          <img src={med.image} alt={med.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{med.name}</p>
+                          <p className="text-xs text-primary font-bold">₹{med.price}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
 
-        <div className="absolute bottom-3 left-3 right-3">
-          <motion.div
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="bg-gradient-to-r from-primary to-accent text-white p-3 rounded-xl text-center"
-          >
-            <span className="text-xs font-bold">Checkout • ₹{cartItems.reduce((sum, id) => sum + (medicines.find(m => m.id === id)?.price || 0), 0)}</span>
-          </motion.div>
+                <div className="mt-3 pt-3 border-t border-border">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Total</span>
+                    <span className="text-lg font-bold text-primary">₹{cartTotal}</span>
+                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="bg-gradient-to-r from-primary to-accent text-white p-3 rounded-xl text-center font-bold text-sm"
+                  >
+                    Proceed to Checkout
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+
+            {phase === "checkout" && (
+              <motion.div
+                key="checkout"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                className="p-3 h-full flex flex-col"
+              >
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" /> Payment
+                </h3>
+
+                <div className="space-y-3 flex-1">
+                  <div className="bg-muted/50 rounded-xl p-3 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Delivery Address</p>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <p className="text-sm font-medium text-foreground">Connaught Place, Delhi</p>
+                    </div>
+                  </div>
+
+                  <motion.div 
+                    animate={{ borderColor: ["hsl(var(--border))", "hsl(var(--primary))", "hsl(var(--border))"] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="bg-primary/10 rounded-xl p-3 border-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                        <CreditCard className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">UPI Payment</p>
+                        <p className="text-xs text-muted-foreground">Pay securely with UPI</p>
+                      </div>
+                      <Check className="w-5 h-5 text-primary ml-auto" />
+                    </div>
+                  </motion.div>
+
+                  <div className="pt-2 border-t border-border">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-foreground">₹{cartTotal}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Delivery</span>
+                      <span className="text-foreground">₹25</span>
+                    </div>
+                    <div className="flex justify-between font-bold">
+                      <span className="text-foreground">Total</span>
+                      <span className="text-primary">₹{cartTotal + 25}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <motion.div
+                  animate={{ scale: [1, 1.02, 1] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className="bg-gradient-to-r from-primary to-accent text-white p-3 rounded-xl text-center font-bold text-sm mt-3"
+                >
+                  Pay ₹{cartTotal + 25}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {phase === "processing" && (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="h-full flex flex-col items-center justify-center p-6"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                  className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary mb-4"
+                />
+                <motion.p 
+                  className="font-bold text-foreground mb-2"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  Processing Order...
+                </motion.p>
+                <div className="space-y-2 w-full">
+                  {["Finding pharmacy", "Confirming stock", "Assigning rider"].map((step, i) => (
+                    <motion.div
+                      key={step}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.5 }}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 1, delay: i * 0.3 }}
+                        className="w-2 h-2 rounded-full bg-accent"
+                      />
+                      <span className="text-muted-foreground">{step}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {phase === "tracking" && (
+              <motion.div
+                key="tracking"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                className="p-3 h-full flex flex-col"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <motion.div 
+                    className="w-2 h-2 rounded-full bg-green-500"
+                    animate={{ scale: [1, 1.5, 1] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
+                  />
+                  <span className="text-xs font-semibold text-green-500">LIVE TRACKING</span>
+                </div>
+
+                <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl h-32 mb-3 relative overflow-hidden">
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: `linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px)`,
+                    backgroundSize: '20px 20px'
+                  }} />
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                    <motion.path
+                      d="M 10 85 Q 30 70, 50 60 T 90 20"
+                      stroke="url(#mobileRouteGradient)"
+                      strokeWidth="2"
+                      strokeDasharray="4,2"
+                      fill="none"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 1 }}
+                    />
+                    <defs>
+                      <linearGradient id="mobileRouteGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#60a5fa" />
+                        <stop offset="100%" stopColor="#2563eb" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <motion.div
+                    className="absolute"
+                    animate={{ 
+                      left: `${10 + (trackingProgress * 0.8)}%`,
+                      top: `${85 - (trackingProgress * 0.65)}%`
+                    }}
+                    style={{ transform: 'translate(-50%, -50%)' }}
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                      className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg"
+                    >
+                      <Truck className="w-4 h-4 text-white" />
+                    </motion.div>
+                  </motion.div>
+                </div>
+
+                <div className="bg-card rounded-xl p-3 border border-border mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-muted-foreground">Delivery Progress</span>
+                    <span className="text-sm font-bold text-primary">{trackingProgress}%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                      style={{ width: `${trackingProgress}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  {[
+                    { icon: Package, label: "Order Confirmed", done: trackingProgress > 10 },
+                    { icon: Store, label: "Picked from Pharmacy", done: trackingProgress > 40 },
+                    { icon: Truck, label: "Out for Delivery", done: trackingProgress > 70 },
+                    { icon: Navigation, label: "Arriving Soon", done: trackingProgress > 90 },
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <motion.div
+                        animate={{ 
+                          backgroundColor: step.done ? "hsl(var(--primary))" : "hsl(var(--muted))",
+                          scale: step.done ? [1, 1.1, 1] : 1
+                        }}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      >
+                        <step.icon className={`w-3 h-3 ${step.done ? "text-white" : "text-muted-foreground"}`} />
+                      </motion.div>
+                      <span className={`text-xs ${step.done ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {step.label}
+                      </span>
+                      {step.done && <Check className="w-3 h-3 text-green-500 ml-auto" />}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {phase === "delivered" && (
+              <motion.div
+                key="delivered"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="h-full flex flex-col items-center justify-center p-6 text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 10 }}
+                  className="relative mb-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 2, opacity: 0 }}
+                    transition={{ repeat: 3, duration: 0.8 }}
+                    className="absolute inset-0 w-20 h-20 rounded-full bg-green-500"
+                  />
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center relative">
+                    <PartyPopper className="w-10 h-10 text-white" />
+                  </div>
+                </motion.div>
+                
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-xl font-bold text-foreground mb-2"
+                >
+                  Delivered!
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-sm text-muted-foreground mb-4"
+                >
+                  Your medicines have arrived safely
+                </motion.p>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="flex gap-1"
+                >
+                  {[1, 2, 3, 4, 5].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8 + i * 0.1 }}
+                    >
+                      <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {showNotification && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, x: "-50%" }}
+                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                exit={{ opacity: 0, y: -20, x: "-50%" }}
+                className="absolute bottom-4 left-1/2 bg-green-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg"
+              >
+                <Check className="w-4 h-4" />
+                <span className="text-xs font-semibold">{notificationText}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
@@ -330,12 +728,16 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 + i * 0.1 }}
-                whileHover={{ scale: 1.02, y: -4 }}
+                whileHover={{ scale: 1.05, y: -8 }}
                 className="glass-card rounded-2xl p-6 text-center card-hover"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-3">
+                <motion.div 
+                  whileHover={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.5 }}
+                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-3"
+                >
                   <stat.icon className="w-6 h-6 text-primary" />
-                </div>
+                </motion.div>
                 <div className="text-3xl md:text-4xl font-bold gradient-text mb-1">{stat.value}</div>
                 <div className="text-muted-foreground text-sm">{stat.label}</div>
               </motion.div>
@@ -372,7 +774,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
-                  whileHover={{ scale: 1.02, y: -4 }}
+                  whileHover={{ scale: 1.03, y: -8 }}
                   className="medicine-card rounded-2xl overflow-hidden group"
                 >
                   <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-card overflow-hidden">
@@ -387,7 +789,7 @@ export default function Home() {
                       </Badge>
                     )}
                     <motion.button
-                      whileHover={{ scale: 1.1 }}
+                      whileHover={{ scale: 1.2, rotate: 15 }}
                       whileTap={{ scale: 0.9 }}
                       className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 dark:bg-card/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
@@ -403,7 +805,7 @@ export default function Home() {
                     </div>
                     <Link href="/order">
                       <Button
-                        className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all font-semibold"
+                        className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all font-semibold group-hover:bg-primary group-hover:text-white"
                         size="sm"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add to Cart
@@ -434,12 +836,16 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.02, y: -4 }}
+                whileHover={{ scale: 1.05, y: -8 }}
                 className="glass-card rounded-2xl p-6 card-hover group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5 group-hover:glow-primary transition-all">
+                <motion.div 
+                  whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5 group-hover:glow-primary transition-all"
+                >
                   <feature.icon className="w-7 h-7 text-primary" />
-                </div>
+                </motion.div>
                 <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
               </motion.div>
@@ -472,7 +878,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.02, y: -4 }}
+                whileHover={{ scale: 1.03, y: -6 }}
                 className="glass-card rounded-2xl overflow-hidden card-hover group cursor-pointer"
               >
                 <div className="h-36 overflow-hidden relative">
@@ -483,9 +889,13 @@ export default function Home() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent" />
                   {!pharmacy.isVerified && (
-                    <span className="absolute top-3 right-3 new-badge text-xs px-2.5 py-1 rounded-full text-white font-medium">
+                    <motion.span 
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="absolute top-3 right-3 new-badge text-xs px-2.5 py-1 rounded-full text-white font-medium"
+                    >
                       NEW
-                    </span>
+                    </motion.span>
                   )}
                 </div>
                 <div className="p-5">
@@ -532,15 +942,35 @@ export default function Home() {
             className="glass-card rounded-3xl p-10 md:p-16 relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+            <motion.div 
+              animate={{ 
+                x: [0, 100, 0],
+                y: [0, -50, 0],
+                opacity: [0.1, 0.2, 0.1]
+              }}
+              transition={{ repeat: Infinity, duration: 10 }}
+              className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" 
+            />
+            <motion.div 
+              animate={{ 
+                x: [0, -50, 0],
+                y: [0, 30, 0],
+                opacity: [0.1, 0.15, 0.1]
+              }}
+              transition={{ repeat: Infinity, duration: 8, delay: 1 }}
+              className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" 
+            />
             
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
               <div className="flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 mb-6">
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 mb-6"
+                >
                   <TrendingUp className="w-4 h-4 text-accent" />
                   <span className="text-sm text-accent font-medium">Grow your business 40%</span>
-                </div>
+                </motion.div>
                 <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">Own a Pharmacy?</h2>
                 <p className="text-muted-foreground max-w-xl mb-8 leading-relaxed">
                   Join our network of 500+ pharmacies in Delhi NCR. Get access to thousands of customers, 
@@ -548,20 +978,27 @@ export default function Home() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                   <Link href="/pharmacy/onboarding">
-                    <Button size="lg" className="px-10 py-6 btn-primary-gradient font-bold rounded-2xl">
-                      Partner with Us <ChevronRight className="w-5 h-5 ml-2" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button size="lg" className="px-10 py-6 btn-primary-gradient font-bold rounded-2xl">
+                        Partner with Us <ChevronRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </motion.div>
                   </Link>
                   <Link href="/pharmacy/dashboard">
-                    <Button size="lg" variant="outline" className="px-8 py-6 border-primary text-primary hover:bg-primary hover:text-white rounded-2xl font-medium">
-                      View Dashboard
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button size="lg" variant="outline" className="px-8 py-6 border-primary text-primary hover:bg-primary hover:text-white rounded-2xl font-medium">
+                        View Dashboard
+                      </Button>
+                    </motion.div>
                   </Link>
                 </div>
               </div>
               <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                animate={{ 
+                  y: [0, -15, 0],
+                  rotate: [0, 2, 0, -2, 0]
+                }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                 className="w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary"
               >
                 <Store className="w-16 h-16 md:w-24 md:h-24 text-white" />

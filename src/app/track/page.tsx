@@ -13,14 +13,21 @@ import { Button } from "@/components/ui/button";
 import { DoseuppLogo } from "@/components/DoseuppLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+const ORDER_ITEMS = [
+  { name: "Paracetamol 500mg", brand: "Crocin", quantity: 2, price: 25, image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100&h=100&fit=crop" },
+  { name: "Vitamin D3 60000IU", brand: "Drise", quantity: 1, price: 120, image: "https://images.unsplash.com/photo-1559757175-7cb057fba93c?w=100&h=100&fit=crop" },
+  { name: "Azithromycin 500mg", brand: "Zithromax", quantity: 1, price: 95, image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=100&h=100&fit=crop" },
+];
+
+const DELIVERY_FEE = 25;
+const SUBTOTAL = ORDER_ITEMS.reduce((sum, item) => sum + item.price * item.quantity, 0);
+const TOTAL = SUBTOTAL + DELIVERY_FEE;
+
 const orderDetails = {
   orderId: "DU12345678",
   placedAt: "2:30 PM",
   estimatedDelivery: "2:42 PM",
-  items: [
-    { name: "Paracetamol 500mg", brand: "Crocin", quantity: 2, price: 25 },
-    { name: "Vitamin D3 60000IU", brand: "Drise", quantity: 1, price: 85 },
-  ],
+  items: ORDER_ITEMS,
   pharmacy: {
     name: "Apollo Pharmacy - Connaught Place",
     address: "Block A-12, Inner Circle, Connaught Place",
@@ -29,7 +36,7 @@ const orderDetails = {
   },
   delivery: {
     address: "Connaught Place, New Delhi - 110001",
-    fee: 25,
+    fee: DELIVERY_FEE,
   },
   rider: {
     name: "Rahul Kumar",
@@ -61,6 +68,7 @@ function TrackContent() {
   const [showDeliveredPopup, setShowDeliveredPopup] = useState(false);
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [verifying, setVerifying] = useState(false);
+  const [rating, setRating] = useState(0);
   const correctOTP = "1234";
 
   useEffect(() => {
@@ -120,8 +128,6 @@ function TrackContent() {
     setVerifying(false);
   };
 
-  const subtotal = orderDetails.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal + orderDetails.delivery.fee;
   const orderId = searchParams.get("orderId") || orderDetails.orderId;
 
   return (
@@ -149,24 +155,54 @@ function TrackContent() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-4">
-              <div className="w-2.5 h-2.5 rounded-full bg-primary pulse-dot" />
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-4"
+            >
+              <motion.div 
+                className="w-2.5 h-2.5 rounded-full bg-primary"
+                animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              />
               <span className="text-sm text-primary font-medium">Live Tracking</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">Track Your Order</h1>
-            <p className="text-muted-foreground">Order #{orderId}</p>
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-3xl md:text-4xl font-bold mb-2 text-foreground"
+            >
+              Track Your Order
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-muted-foreground"
+            >
+              Order #{orderId}
+            </motion.p>
           </motion.div>
 
           <div className="grid lg:grid-cols-5 gap-6">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
               className="lg:col-span-3 space-y-6"
             >
-              <div className="glass-card rounded-3xl overflow-hidden">
+              <motion.div 
+                className="glass-card rounded-3xl overflow-hidden"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <div className="h-56 bg-gradient-to-br from-secondary/50 to-card relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-30">
+                  <motion.div 
+                    className="absolute inset-0 opacity-30"
+                    animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+                    transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                  >
                     <div className="absolute inset-0" style={{
                       backgroundImage: `
                         linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
@@ -174,7 +210,7 @@ function TrackContent() {
                       `,
                       backgroundSize: '30px 30px'
                     }} />
-                  </div>
+                  </motion.div>
                   
                   <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <motion.path
@@ -197,9 +233,10 @@ function TrackContent() {
 
                   <motion.div
                     className="absolute bottom-4 left-4 bg-accent backdrop-blur-sm px-3 py-2 rounded-xl"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 }}
+                    initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                    whileHover={{ scale: 1.05 }}
                   >
                     <div className="flex items-center gap-2">
                       <Store className="w-4 h-4 text-white" />
@@ -209,9 +246,10 @@ function TrackContent() {
                   
                   <motion.div
                     className="absolute top-4 right-4 bg-primary backdrop-blur-sm px-3 py-2 rounded-xl"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7 }}
+                    initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ delay: 0.7, type: "spring" }}
+                    whileHover={{ scale: 1.05 }}
                   >
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-white" />
@@ -228,16 +266,21 @@ function TrackContent() {
                           top: `${riderLocation.y}%`,
                           transform: 'translate(-50%, -50%)'
                         }}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", damping: 10 }}
                       >
                         <motion.div
                           className="relative"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ repeat: Infinity, duration: 1.5 }}
                         >
-                          <div className="absolute inset-0 bg-primary/30 rounded-full blur-md scale-150" />
-                          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg">
+                          <motion.div 
+                            className="absolute inset-0 bg-primary/30 rounded-full blur-md"
+                            animate={{ scale: [1, 1.5, 1] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                          />
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg relative">
                             <Truck className="w-5 h-5 text-white" />
                           </div>
                         </motion.div>
@@ -250,30 +293,51 @@ function TrackContent() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Estimated Delivery</p>
-                      <p className="text-2xl font-bold text-primary">{orderDetails.estimatedDelivery}</p>
+                      <motion.p 
+                        className="text-2xl font-bold text-primary"
+                        animate={{ scale: [1, 1.02, 1] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                      >
+                        {orderDetails.estimatedDelivery}
+                      </motion.p>
                     </div>
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <motion.div 
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ repeat: Infinity, duration: 4 }}
+                    >
                       <Clock className="w-8 h-8 text-primary" />
-                    </div>
+                    </motion.div>
                   </div>
                   
                   <div className="mb-2">
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Delivery Progress</span>
-                      <span className="text-primary font-semibold">{progress}%</span>
+                      <motion.span 
+                        className="text-primary font-semibold"
+                        key={progress}
+                        initial={{ scale: 1.2 }}
+                        animate={{ scale: 1 }}
+                      >
+                        {progress}%
+                      </motion.span>
                     </div>
-                    <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <motion.div 
-                        className="h-full progress-bar-animated rounded-full"
+                        className="h-full rounded-full relative overflow-hidden"
+                        style={{ background: "linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #2563eb 100%)", backgroundSize: "200% 100%" }}
                         initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.5 }}
+                        animate={{ width: `${progress}%`, backgroundPosition: ["0% 0%", "200% 0%"] }}
+                        transition={{ width: { duration: 0.5 }, backgroundPosition: { repeat: Infinity, duration: 2, ease: "linear" } }}
                       />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border mt-4">
-                    <div className="flex items-center gap-3">
+                    <motion.div 
+                      className="flex items-center gap-3"
+                      whileHover={{ x: 4 }}
+                    >
                       <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                         <Store className="w-5 h-5 text-accent" />
                       </div>
@@ -281,8 +345,11 @@ function TrackContent() {
                         <p className="text-xs text-muted-foreground">From</p>
                         <p className="font-medium text-sm line-clamp-1 text-foreground">{orderDetails.pharmacy.name.split(' - ')[0]}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
+                    </motion.div>
+                    <motion.div 
+                      className="flex items-center gap-3"
+                      whileHover={{ x: 4 }}
+                    >
                       <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                         <MapPin className="w-5 h-5 text-primary" />
                       </div>
@@ -290,75 +357,107 @@ function TrackContent() {
                         <p className="text-xs text-muted-foreground">To</p>
                         <p className="font-medium text-sm line-clamp-1 text-foreground">{orderDetails.delivery.address.split(',')[0]}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              {currentStep >= 5 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="glass-card rounded-2xl p-5"
-                >
-                  <h3 className="font-bold mb-4 flex items-center gap-2 text-foreground">
-                    <Truck className="w-5 h-5 text-primary" />
-                    Delivery Partner
-                  </h3>
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
-                      <img 
-                        src={orderDetails.rider.image} 
-                        alt={orderDetails.rider.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-foreground">{orderDetails.rider.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ⭐ {orderDetails.rider.rating} • {orderDetails.rider.deliveries} deliveries
-                      </p>
-                      <p className="text-xs text-muted-foreground">{orderDetails.rider.vehicle}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
-                        <Phone className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
-                        <MessageSquare className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {currentStep === 6 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/30"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                          <Fingerprint className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-foreground">Verification OTP</p>
-                          <p className="text-2xl font-bold text-primary tracking-widest">1234</p>
-                          <p className="text-xs text-muted-foreground">Share this OTP with rider at delivery</p>
-                        </div>
+              <AnimatePresence>
+                {currentStep >= 5 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: "spring", damping: 20 }}
+                    className="glass-card rounded-2xl p-5"
+                  >
+                    <h3 className="font-bold mb-4 flex items-center gap-2 text-foreground">
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                      >
+                        <Truck className="w-5 h-5 text-primary" />
+                      </motion.div>
+                      Delivery Partner
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      <motion.div 
+                        className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                      >
+                        <img 
+                          src={orderDetails.rider.image} 
+                          alt={orderDetails.rider.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.div>
+                      <div className="flex-1">
+                        <p className="font-bold text-foreground">{orderDetails.rider.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          ⭐ {orderDetails.rider.rating} • {orderDetails.rider.deliveries} deliveries
+                        </p>
+                        <p className="text-xs text-muted-foreground">{orderDetails.rider.vehicle}</p>
                       </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
+                      <div className="flex gap-2">
+                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                          <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
+                            <Phone className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                          <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    <AnimatePresence>
+                      {currentStep === 6 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/30 overflow-hidden"
+                        >
+                          <div className="flex items-center gap-3">
+                            <motion.div 
+                              className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center"
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ repeat: Infinity, duration: 1.5 }}
+                            >
+                              <Fingerprint className="w-5 h-5 text-primary" />
+                            </motion.div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-foreground">Verification OTP</p>
+                              <motion.p 
+                                className="text-2xl font-bold text-primary tracking-widest"
+                                animate={{ scale: [1, 1.05, 1] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                              >
+                                1234
+                              </motion.p>
+                              <p className="text-xs text-muted-foreground">Share this OTP with rider at delivery</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
               className="lg:col-span-2 space-y-6"
             >
-              <div className="glass-card rounded-2xl p-5">
+              <motion.div 
+                className="glass-card rounded-2xl p-5"
+                whileHover={{ scale: 1.01 }}
+              >
                 <h3 className="font-bold mb-4 text-foreground">Order Progress</h3>
                 <div className="space-y-1">
                   {trackingSteps.map((step, i) => {
@@ -369,15 +468,20 @@ function TrackContent() {
                     return (
                       <motion.div
                         key={step.id}
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
+                        transition={{ delay: i * 0.08 }}
                         className="flex items-start gap-3"
                       >
                         <div className="relative flex flex-col items-center">
                           <motion.div
                             initial={{ scale: 0.8 }}
-                            animate={{ scale: isCompleted || isCurrent ? 1 : 0.8 }}
+                            animate={{ 
+                              scale: isCurrent ? [1, 1.1, 1] : (isCompleted ? 1 : 0.8),
+                            }}
+                            transition={{ 
+                              scale: isCurrent ? { repeat: Infinity, duration: 1.5 } : { duration: 0.3 }
+                            }}
                             className={`w-10 h-10 rounded-xl flex items-center justify-center z-10 ${
                               isCompleted || isCurrent
                                 ? step.id === 8 && isCompleted 
@@ -389,63 +493,101 @@ function TrackContent() {
                             <Icon className={`w-5 h-5 ${isCompleted || isCurrent ? "text-white" : "text-muted-foreground"}`} />
                           </motion.div>
                           {i < trackingSteps.length - 1 && (
-                            <div className={`w-0.5 h-6 ${isCompleted ? "bg-primary" : "bg-border"}`} />
+                            <motion.div 
+                              className={`w-0.5 h-6 ${isCompleted ? "bg-primary" : "bg-border"}`}
+                              initial={{ height: 0 }}
+                              animate={{ height: 24 }}
+                              transition={{ delay: i * 0.08 + 0.2 }}
+                            />
                           )}
                         </div>
                         <div className="flex-1 pt-2 pb-2">
                           <div className="flex items-center justify-between">
                             <p className={`font-medium text-sm ${isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>{step.title}</p>
                             {(isCompleted || isCurrent) && step.time && (
-                              <span className="text-xs text-muted-foreground">{step.time}</span>
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-xs text-muted-foreground"
+                              >
+                                {step.time}
+                              </motion.span>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">{step.description}</p>
                           {isCurrent && step.id === 2 && (
-                            <div className="ai-thinking mt-2 rounded-lg px-3 py-1.5 text-xs text-accent flex items-center gap-2">
-                              <Sparkles className="w-3 h-3" />
+                            <motion.div 
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="ai-thinking mt-2 rounded-lg px-3 py-1.5 text-xs text-accent flex items-center gap-2"
+                            >
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                              >
+                                <Sparkles className="w-3 h-3" />
+                              </motion.div>
                               AI analyzing pharmacies...
-                            </div>
+                            </motion.div>
                           )}
                         </div>
                       </motion.div>
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="glass-card rounded-2xl p-5">
+              <motion.div 
+                className="glass-card rounded-2xl p-5"
+                whileHover={{ scale: 1.01 }}
+              >
                 <h3 className="font-bold mb-4 text-foreground">Order Summary</h3>
                 <div className="space-y-3 mb-4">
-                  {orderDetails.items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm text-foreground">{item.name}</p>
+                  {ORDER_ITEMS.map((item, i) => (
+                    <motion.div 
+                      key={i} 
+                      className="flex items-center gap-3"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      whileHover={{ x: 4 }}
+                    >
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
                         <p className="text-xs text-muted-foreground">{item.brand} × {item.quantity}</p>
                       </div>
                       <span className="font-semibold text-foreground">₹{item.price * item.quantity}</span>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
                 <div className="space-y-2 pt-4 border-t border-border">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">₹{subtotal}</span>
+                    <span className="text-foreground">₹{SUBTOTAL}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Delivery Fee</span>
-                    <span className="text-foreground">₹{orderDetails.delivery.fee}</span>
+                    <span className="text-foreground">₹{DELIVERY_FEE}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg pt-2">
+                  <motion.div 
+                    className="flex justify-between font-bold text-lg pt-2"
+                    whileHover={{ scale: 1.02 }}
+                  >
                     <span className="text-foreground">Total</span>
-                    <span className="text-primary">₹{total}</span>
-                  </div>
+                    <span className="text-primary">₹{TOTAL}</span>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
 
               <Link href="/order">
-                <Button className="w-full btn-primary-gradient font-bold py-5">
-                  Order More Medicines <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button className="w-full btn-primary-gradient font-bold py-5">
+                    Order More Medicines <ChevronRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </motion.div>
               </Link>
             </motion.div>
           </div>
@@ -454,47 +596,52 @@ function TrackContent() {
 
       <AnimatePresence>
         {showVerificationPopup && (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ scale: 0.5, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.5, opacity: 0, y: 50 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="glass-card rounded-3xl p-8 max-w-md w-full text-center"
             >
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="glass-card rounded-3xl p-8 max-w-md w-full text-center"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-6 glow-primary"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-6 glow-primary"
-                >
-                  <Fingerprint className="w-10 h-10 text-white" />
-                </motion.div>
-                
-                <h2 className="text-2xl font-bold mb-2 text-foreground">Doorstep Verification</h2>
-                <p className="text-muted-foreground mb-6">
-                  Rider is at your doorstep! Enter the OTP shared by the rider to receive your order.
-                </p>
+                <Fingerprint className="w-10 h-10 text-white" />
+              </motion.div>
+              
+              <h2 className="text-2xl font-bold mb-2 text-foreground">Doorstep Verification</h2>
+              <p className="text-muted-foreground mb-6">
+                Rider is at your doorstep! Enter the OTP shared by the rider to receive your order.
+              </p>
 
-                <div className="flex justify-center gap-3 mb-6">
-                  {otp.map((digit, i) => (
-                    <input
-                      key={i}
-                      id={`otp-${i}`}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleOTPChange(i, e.target.value)}
-                      className="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-border bg-card text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                  ))}
-                </div>
+              <div className="flex justify-center gap-3 mb-6">
+                {otp.map((digit, i) => (
+                  <motion.input
+                    key={i}
+                    id={`otp-${i}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOTPChange(i, e.target.value)}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: i * 0.1, type: "spring" }}
+                    whileFocus={{ scale: 1.05, borderColor: "hsl(var(--primary))" }}
+                    className="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-border bg-card text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                ))}
+              </div>
 
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   onClick={handleVerifyOTP}
                   disabled={otp.join("").length < 4 || verifying}
@@ -502,7 +649,11 @@ function TrackContent() {
                 >
                   {verifying ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                      <motion.div 
+                        className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      />
                       Verifying...
                     </>
                   ) : (
@@ -512,13 +663,13 @@ function TrackContent() {
                     </>
                   )}
                 </Button>
-
-                <p className="text-xs text-muted-foreground mt-4">
-                  OTP ensures your order is delivered to the right person
-                </p>
               </motion.div>
+
+              <p className="text-xs text-muted-foreground mt-4">
+                OTP ensures your order is delivered to the right person
+              </p>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -531,15 +682,15 @@ function TrackContent() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
+              initial={{ scale: 0.3, opacity: 0, rotate: -10 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.3, opacity: 0, rotate: 10 }}
               transition={{ type: "spring", damping: 15 }}
               className="glass-card rounded-3xl p-8 max-w-md w-full text-center relative overflow-hidden"
             >
               <button
                 onClick={() => setShowDeliveredPopup(false)}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -550,14 +701,38 @@ function TrackContent() {
                 transition={{ type: "spring", damping: 10, delay: 0.2 }}
                 className="relative"
               >
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0, x: 0, y: 0 }}
+                    animate={{ 
+                      scale: [0, 1, 0],
+                      x: Math.cos(i * 45 * Math.PI / 180) * 80,
+                      y: Math.sin(i * 45 * Math.PI / 180) * 80,
+                    }}
+                    transition={{ delay: 0.3 + i * 0.05, duration: 0.6 }}
+                    className="absolute left-1/2 top-1/2 w-3 h-3 rounded-full"
+                    style={{ 
+                      backgroundColor: ['#22c55e', '#60a5fa', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#3b82f6', '#f97316'][i],
+                      marginLeft: -6,
+                      marginTop: -6,
+                    }}
+                  />
+                ))}
                 <motion.div
-                  initial={{ scale: 0, opacity: 1 }}
-                  animate={{ scale: 3, opacity: 0 }}
-                  transition={{ duration: 1, repeat: 2 }}
+                  initial={{ scale: 0.5, opacity: 1 }}
+                  animate={{ scale: 2.5, opacity: 0 }}
+                  transition={{ duration: 0.8, repeat: 2 }}
                   className="absolute inset-0 w-24 h-24 rounded-full bg-green-500 mx-auto"
                 />
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 relative">
-                  <PartyPopper className="w-12 h-12 text-white" />
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                  >
+                    <PartyPopper className="w-12 h-12 text-white" />
+                  </motion.div>
                 </div>
               </motion.div>
               
@@ -571,34 +746,47 @@ function TrackContent() {
                   Your medicines have been delivered successfully. Thank you for choosing Doseupp!
                 </p>
 
-                <div className="glass-card rounded-xl p-4 mb-6">
-                  <p className="text-sm text-muted-foreground mb-2">Rate your delivery experience</p>
+                <motion.div 
+                  className="glass-card rounded-xl p-4 mb-6"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <p className="text-sm text-muted-foreground mb-3">Rate your delivery experience</p>
                   <div className="flex justify-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <motion.button
                         key={star}
-                        whileHover={{ scale: 1.2 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.6 + star * 0.1, type: "spring" }}
+                        whileHover={{ scale: 1.3, rotate: 15 }}
                         whileTap={{ scale: 0.9 }}
+                        onClick={() => setRating(star)}
                         className="text-primary"
                       >
-                        <Star className="w-8 h-8 fill-primary" />
+                        <Star className={`w-8 h-8 ${rating >= star ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted-foreground"}`} />
                       </motion.button>
                     ))}
                   </div>
-                </div>
+                </motion.div>
 
                 <div className="flex gap-3">
-                  <Button
-                    onClick={() => setShowDeliveredPopup(false)}
-                    variant="outline"
-                    className="flex-1 border-primary text-primary hover:bg-primary hover:text-white py-5 font-medium"
-                  >
-                    Close
-                  </Button>
-                  <Link href="/order" className="flex-1">
-                    <Button className="w-full btn-primary-gradient font-bold py-5">
-                      Order Again
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+                    <Button
+                      onClick={() => setShowDeliveredPopup(false)}
+                      variant="outline"
+                      className="w-full border-primary text-primary hover:bg-primary hover:text-white py-5 font-medium"
+                    >
+                      Close
                     </Button>
+                  </motion.div>
+                  <Link href="/order" className="flex-1">
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button className="w-full btn-primary-gradient font-bold py-5">
+                        Order Again
+                      </Button>
+                    </motion.div>
                   </Link>
                 </div>
               </motion.div>
@@ -614,7 +802,11 @@ export default function TrackOrder() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <motion.div 
+          className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        />
       </div>
     }>
       <TrackContent />
