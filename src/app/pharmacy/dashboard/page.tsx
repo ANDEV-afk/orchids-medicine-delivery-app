@@ -104,26 +104,26 @@ export default function PharmacyDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card">
+    <div className="min-h-screen bg-background mesh-gradient">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-background" />
+              <Pill className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">MedRush</span>
-            <Badge variant="outline" className="ml-2 border-primary/50 text-primary">Pharmacy</Badge>
+            <Badge variant="outline" className="ml-2 border-primary text-primary">Pharmacy</Badge>
           </Link>
           
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="relative">
+            <Button variant="ghost" size="sm" className="relative text-foreground hover:bg-muted">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full text-[10px] flex items-center justify-center text-white">3</span>
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-foreground hover:bg-muted">
               <Settings className="w-5 h-5" />
             </Button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-background font-semibold">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
               M
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function PharmacyDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold mb-2">Welcome back, MedPlus!</h1>
+            <h1 className="text-3xl font-bold mb-2 text-foreground">Welcome back, MedPlus!</h1>
             <p className="text-muted-foreground">Heres whats happening with your store today.</p>
           </motion.div>
 
@@ -148,19 +148,19 @@ export default function PharmacyDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card rounded-2xl p-5"
+                className="glass-card rounded-2xl p-5 bg-white"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-10 h-10 rounded-xl bg-${stat.color}/20 flex items-center justify-center`}>
                     <stat.icon className={`w-5 h-5 text-${stat.color}`} />
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${
-                    stat.change.startsWith('+') ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'
+                    stat.change.startsWith('+') ? 'bg-green-500/20 text-green-600' : 'bg-yellow-500/20 text-yellow-600'
                   }`}>
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
               </motion.div>
             ))}
@@ -171,18 +171,18 @@ export default function PharmacyDashboard() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="glass-card rounded-3xl p-6"
+                className="glass-card rounded-3xl p-6 bg-white"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold">Orders</h2>
+                  <h2 className="text-xl font-semibold text-foreground">Orders</h2>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search orders..." className="pl-10 w-48 bg-secondary border-border/50" />
+                    <Input placeholder="Search orders..." className="pl-10 w-48 bg-muted border-border text-foreground" />
                   </div>
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="bg-secondary mb-4">
+                  <TabsList className="bg-muted mb-4">
                     <TabsTrigger value="all">All</TabsTrigger>
                     <TabsTrigger value="pending">Pending</TabsTrigger>
                     <TabsTrigger value="preparing">Preparing</TabsTrigger>
@@ -198,11 +198,11 @@ export default function PharmacyDashboard() {
                           <div
                             key={order.id}
                             onClick={() => setSelectedOrder(order)}
-                            className="p-4 bg-secondary/50 rounded-xl cursor-pointer hover:bg-secondary transition-colors"
+                            className="p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted transition-colors"
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-3">
-                                <span className="font-semibold">#{order.id}</span>
+                                <span className="font-semibold text-foreground">#{order.id}</span>
                                 <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${status.color}`}>
                                   <status.icon className="w-3 h-3" />
                                   {status.label}
@@ -210,7 +210,7 @@ export default function PharmacyDashboard() {
                               </div>
                               <span className="text-xs text-muted-foreground">{order.time}</span>
                             </div>
-                            <p className="font-medium mb-1">{order.customer}</p>
+                            <p className="font-medium mb-1 text-foreground">{order.customer}</p>
                             <p className="text-sm text-muted-foreground line-clamp-1">
                               {order.items.join(", ")}
                             </p>
@@ -232,9 +232,9 @@ export default function PharmacyDashboard() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              <div className="glass-card rounded-3xl p-6">
+              <div className="glass-card rounded-3xl p-6 bg-white">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Low Stock Alert</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Low Stock Alert</h2>
                   <Badge variant="destructive" className="text-xs">
                     {inventory.filter(i => i.lowStock).length} items
                   </Badge>

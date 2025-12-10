@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, MapPin, Star, Clock, Plus, Minus, ShoppingCart, 
   Pill, ChevronRight, X, SlidersHorizontal, Truck,
   CreditCard, Banknote, Check, Package, Sparkles, Brain,
-  CheckCircle, AlertCircle, Navigation, Zap, Shield, BadgeCheck
+  CheckCircle, Navigation, Zap, Shield, BadgeCheck
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,28 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getPharmaciesWithDistances, findNearestPharmacyWithStock, type Pharmacy, subscribeToPharmacies } from "@/lib/pharmacy-store";
-
-const categories = [
-  { name: "All", icon: "💊" },
-  { name: "Pain Relief", icon: "🩹" },
-  { name: "Antibiotics", icon: "💉" },
-  { name: "Vitamins", icon: "🍊" },
-  { name: "Cold & Flu", icon: "🤧" },
-  { name: "Diabetes", icon: "🩺" },
-  { name: "Heart Care", icon: "❤️" },
-  { name: "Skin Care", icon: "✨" },
-];
-
-const medicines = [
-  { id: 1, name: "Paracetamol 500mg", brand: "Crocin", category: "Pain Relief", price: 25, originalPrice: 35, stock: 50, image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200" },
-  { id: 2, name: "Azithromycin 500mg", brand: "Azithral", category: "Antibiotics", price: 120, originalPrice: 150, stock: 25, image: "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=200" },
-  { id: 3, name: "Vitamin D3 60000IU", brand: "Drise", category: "Vitamins", price: 85, originalPrice: 100, stock: 100, image: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=200" },
-  { id: 4, name: "Cetirizine 10mg", brand: "Cetcip", category: "Cold & Flu", price: 35, originalPrice: 45, stock: 80, image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=200" },
-  { id: 5, name: "Metformin 500mg", brand: "Glycomet", category: "Diabetes", price: 45, originalPrice: 55, stock: 60, image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200" },
-  { id: 6, name: "Aspirin 75mg", brand: "Ecosprin", category: "Heart Care", price: 30, originalPrice: 40, stock: 90, image: "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=200" },
-  { id: 7, name: "Multivitamin Tablets", brand: "Supradyn", category: "Vitamins", price: 145, originalPrice: 180, stock: 45, image: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=200" },
-  { id: 8, name: "Omeprazole 20mg", brand: "Pan", category: "Pain Relief", price: 55, originalPrice: 70, stock: 70, image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=200" },
-];
+import { medicines, categories, type Medicine } from "@/lib/medicines-store";
 
 type CartItem = {
   id: number;
@@ -83,7 +62,7 @@ export default function OrderPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const addToCart = (medicine: typeof medicines[0]) => {
+  const addToCart = (medicine: Medicine) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === medicine.id);
       if (existing) {
@@ -147,11 +126,11 @@ export default function OrderPage() {
 
   return (
     <div className="min-h-screen bg-background mesh-gradient">
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-background" />
+              <Pill className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">MedRush</span>
           </Link>
@@ -160,7 +139,7 @@ export default function OrderPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 
               placeholder="Search medicines, brands..." 
-              className="pl-12 bg-card/50 border-border/50 rounded-xl focus:ring-2 focus:ring-primary/50"
+              className="pl-12 bg-white border-border rounded-xl focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -168,7 +147,7 @@ export default function OrderPage() {
           
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="relative bg-gradient-to-r from-primary to-emerald-400 text-background font-semibold hover:opacity-90"
+            className="relative btn-primary-gradient font-semibold"
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
             Cart
@@ -199,10 +178,10 @@ export default function OrderPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-5 py-3 rounded-2xl whitespace-nowrap transition-all font-medium ${
                   selectedCategory === cat.name 
-                    ? "bg-gradient-to-r from-primary to-emerald-400 text-background font-semibold shadow-lg glow-primary" 
-                    : "bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card"
+                    ? "btn-primary-gradient shadow-lg glow-primary" 
+                    : "bg-white border border-border hover:border-primary/50 hover:bg-primary/5 text-foreground"
                 }`}
               >
                 <span className="text-lg">{cat.icon}</span>
@@ -219,12 +198,12 @@ export default function OrderPage() {
           >
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/30">
               <Navigation className="w-4 h-4 text-primary" />
-              <span className="text-sm">📍 <span className="font-semibold">{userLocation.address}</span></span>
+              <span className="text-sm text-foreground">📍 <span className="font-semibold">{userLocation.address}</span></span>
             </div>
             <Button 
               variant="outline" 
               size="sm" 
-              className="border-border/50 hover:border-primary/50"
+              className="border-border hover:border-primary hover:bg-primary/5 text-foreground font-medium"
               onClick={() => setShowAllPharmacies(!showAllPharmacies)}
             >
               <SlidersHorizontal className="w-4 h-4 mr-2" />
@@ -240,18 +219,18 @@ export default function OrderPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold">Partner Pharmacies</h2>
-                <Badge className="bg-primary/20 text-primary border-0">{pharmacies.length} in Delhi NCR</Badge>
+                <h2 className="text-xl font-bold text-foreground">Partner Pharmacies</h2>
+                <Badge className="bg-primary/10 text-primary border-primary/30">{pharmacies.length} in Delhi NCR</Badge>
               </div>
               {cart.length > 0 && (
                 <Button
                   onClick={handleAISelectPharmacy}
                   disabled={aiSelecting}
-                  className="bg-gradient-to-r from-cyan-500 to-primary text-background font-semibold"
+                  className="btn-accent-gradient font-semibold"
                 >
                   {aiSelecting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin mr-2" />
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                       AI Analyzing...
                     </>
                   ) : (
@@ -268,12 +247,12 @@ export default function OrderPage() {
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
-                className="ai-thinking rounded-2xl p-4 mb-4 border border-cyan-500/30"
+                className="ai-thinking rounded-2xl p-4 mb-4 border border-accent/30"
               >
                 <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse" />
+                  <Sparkles className="w-5 h-5 text-accent animate-pulse" />
                   <div>
-                    <p className="font-semibold text-cyan-400">AI Smart Selection</p>
+                    <p className="font-semibold text-accent">AI Smart Selection</p>
                     <p className="text-sm text-muted-foreground">Analyzing stock availability, distance, and delivery times...</p>
                   </div>
                 </div>
@@ -290,16 +269,16 @@ export default function OrderPage() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => setSelectedPharmacy(pharmacy)}
-                    className={`glass-card rounded-2xl p-4 cursor-pointer transition-all card-hover ${
+                    className={`glass-card rounded-2xl p-4 cursor-pointer transition-all card-hover bg-white ${
                       selectedPharmacy?.id === pharmacy.id 
-                        ? "border-primary glow-primary" 
-                        : "hover:border-primary/30"
+                        ? "border-2 border-primary glow-primary" 
+                        : "border border-border hover:border-primary/30"
                     }`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold line-clamp-1">{pharmacy.name}</h3>
+                          <h3 className="font-semibold line-clamp-1 text-foreground">{pharmacy.name}</h3>
                           {pharmacy.isVerified && (
                             <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
                           )}
@@ -316,13 +295,13 @@ export default function OrderPage() {
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-primary" /> {pharmacy.distance}
+                        <MapPin className="w-3.5 h-3.5 text-primary" /> <span className="text-foreground font-medium">{pharmacy.distance}</span>
                       </span>
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-accent" /> {pharmacy.deliveryTime}
+                        <Clock className="w-3.5 h-3.5 text-accent" /> <span className="text-foreground font-medium">{pharmacy.deliveryTime}</span>
                       </span>
                       <span className="flex items-center gap-1">
-                        <Truck className="w-3.5 h-3.5" /> ₹{pharmacy.deliveryFee}
+                        <Truck className="w-3.5 h-3.5" /> <span className="text-foreground font-medium">₹{pharmacy.deliveryFee}</span>
                       </span>
                     </div>
                     {selectedPharmacy?.id === pharmacy.id && (
@@ -343,7 +322,7 @@ export default function OrderPage() {
             {pharmacies.length > 6 && !showAllPharmacies && (
               <Button 
                 variant="ghost" 
-                className="w-full mt-4 text-primary hover:bg-primary/10"
+                className="w-full mt-4 text-primary hover:bg-primary/10 font-medium"
                 onClick={() => setShowAllPharmacies(true)}
               >
                 View all {pharmacies.length} pharmacies <ChevronRight className="w-4 h-4 ml-1" />
@@ -356,7 +335,7 @@ export default function OrderPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <h2 className="text-xl font-bold mb-4">Medicines</h2>
+            <h2 className="text-xl font-bold mb-4 text-foreground">Medicines ({filteredMedicines.length})</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredMedicines.map((medicine, index) => {
                 const quantity = getItemQuantity(medicine.id);
@@ -367,24 +346,32 @@ export default function OrderPage() {
                     key={medicine.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="glass-card rounded-2xl overflow-hidden group card-hover"
+                    transition={{ delay: index * 0.02 }}
+                    className="medicine-card rounded-2xl overflow-hidden group card-hover bg-white"
                   >
-                    <div className="relative h-32 bg-gradient-to-br from-secondary to-card overflow-hidden">
+                    <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-white overflow-hidden">
                       <img 
                         src={medicine.image} 
                         alt={medicine.name}
-                        className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500"
                       />
                       {discount > 0 && (
                         <Badge className="absolute top-2 left-2 bg-accent text-white border-0 font-bold">
                           {discount}% OFF
                         </Badge>
                       )}
+                      {medicine.prescription && (
+                        <Badge className="absolute top-2 right-2 bg-destructive text-white border-0 text-xs">
+                          Rx
+                        </Badge>
+                      )}
                     </div>
                     <div className="p-4">
                       <p className="text-xs text-muted-foreground mb-1">{medicine.brand}</p>
-                      <h3 className="font-semibold text-sm mb-2 line-clamp-1">{medicine.name}</h3>
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-1 text-foreground">{medicine.name}</h3>
+                      {medicine.description && (
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{medicine.description}</p>
+                      )}
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg font-bold text-primary">₹{medicine.price}</span>
                         <span className="text-sm text-muted-foreground line-through">₹{medicine.originalPrice}</span>
@@ -393,7 +380,7 @@ export default function OrderPage() {
                       {quantity === 0 ? (
                         <Button
                           onClick={() => addToCart(medicine)}
-                          className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-background transition-all font-semibold"
+                          className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all font-semibold"
                           size="sm"
                         >
                           <Plus className="w-4 h-4 mr-1" /> Add to Cart
@@ -402,22 +389,22 @@ export default function OrderPage() {
                         <motion.div 
                           initial={{ scale: 0.9 }}
                           animate={{ scale: 1 }}
-                          className="flex items-center justify-between bg-primary rounded-xl p-1"
+                          className="flex items-center justify-between btn-primary-gradient rounded-xl p-1"
                         >
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => removeFromCart(medicine.id)}
-                            className="h-8 w-8 p-0 text-background hover:bg-white/20"
+                            className="h-8 w-8 p-0 text-white hover:bg-white/20"
                           >
                             <Minus className="w-4 h-4" />
                           </Button>
-                          <span className="font-bold text-background">{quantity}</span>
+                          <span className="font-bold text-white">{quantity}</span>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => addToCart(medicine)}
-                            className="h-8 w-8 p-0 text-background hover:bg-white/20"
+                            className="h-8 w-8 p-0 text-white hover:bg-white/20"
                           >
                             <Plus className="w-4 h-4" />
                           </Button>
@@ -439,7 +426,7 @@ export default function OrderPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
               onClick={() => { setIsCartOpen(false); setCheckoutStep(0); setOrderStatus("idle"); }}
             />
             <motion.div
@@ -447,11 +434,11 @@ export default function OrderPage() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed top-0 right-0 h-full w-full max-w-md glass-card z-50 flex flex-col"
+              className="fixed top-0 right-0 h-full w-full max-w-md glass-card z-50 flex flex-col bg-white border-l border-border"
             >
-              <div className="p-6 border-b border-border/50 flex items-center justify-between">
+              <div className="p-6 border-b border-border flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold">
+                  <h2 className="text-xl font-bold text-foreground">
                     {checkoutStep === 0 && "Your Cart"}
                     {checkoutStep === 1 && "Delivery Address"}
                     {checkoutStep === 2 && "Payment"}
@@ -465,7 +452,7 @@ export default function OrderPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => { setIsCartOpen(false); setCheckoutStep(0); setOrderStatus("idle"); }}
-                  className="hover:bg-card"
+                  className="hover:bg-muted text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -476,13 +463,13 @@ export default function OrderPage() {
                   <>
                     {cart.length === 0 ? (
                       <div className="text-center py-16">
-                        <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center mx-auto mb-4">
+                        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                           <ShoppingCart className="w-10 h-10 text-muted-foreground" />
                         </div>
                         <p className="text-muted-foreground mb-4">Your cart is empty</p>
                         <Button 
                           onClick={() => setIsCartOpen(false)}
-                          className="bg-primary/10 text-primary hover:bg-primary hover:text-background"
+                          className="bg-primary/10 text-primary hover:bg-primary hover:text-white font-medium"
                         >
                           Start Shopping
                         </Button>
@@ -495,7 +482,7 @@ export default function OrderPage() {
                               <Zap className="w-4 h-4 text-primary" />
                               <span className="text-sm font-semibold text-primary">Delivering from</span>
                             </div>
-                            <p className="font-semibold">{selectedPharmacy.name}</p>
+                            <p className="font-semibold text-foreground">{selectedPharmacy.name}</p>
                             <p className="text-sm text-muted-foreground">{selectedPharmacy.distance} away • {selectedPharmacy.deliveryTime}</p>
                           </div>
                         )}
@@ -507,28 +494,28 @@ export default function OrderPage() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="flex items-center gap-4 p-4 bg-card rounded-xl"
+                            className="flex items-center gap-4 p-4 bg-muted rounded-xl"
                           >
                             <div className="flex-1">
                               <p className="text-xs text-muted-foreground">{item.brand}</p>
-                              <p className="font-semibold">{item.name}</p>
+                              <p className="font-semibold text-foreground">{item.name}</p>
                               <p className="text-primary font-bold">₹{item.price}</p>
                             </div>
-                            <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
+                            <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-border">
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => removeFromCart(item.id)}
-                                className="h-7 w-7 p-0 hover:bg-card"
+                                className="h-7 w-7 p-0 hover:bg-muted text-foreground"
                               >
                                 <Minus className="w-3 h-3" />
                               </Button>
-                              <span className="w-6 text-center font-bold">{item.quantity}</span>
+                              <span className="w-6 text-center font-bold text-foreground">{item.quantity}</span>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => addToCart(medicines.find(m => m.id === item.id)!)}
-                                className="h-7 w-7 p-0 hover:bg-card"
+                                className="h-7 w-7 p-0 hover:bg-muted text-foreground"
                               >
                                 <Plus className="w-3 h-3" />
                               </Button>
@@ -546,7 +533,7 @@ export default function OrderPage() {
                       <div className="flex items-start gap-3">
                         <MapPin className="w-5 h-5 text-primary mt-1" />
                         <div className="flex-1">
-                          <p className="font-semibold">Home</p>
+                          <p className="font-semibold text-foreground">Home</p>
                           <p className="text-sm text-muted-foreground">
                             {userLocation.address}, New Delhi - 110001
                           </p>
@@ -554,18 +541,18 @@ export default function OrderPage() {
                         <Check className="w-5 h-5 text-primary" />
                       </div>
                     </div>
-                    <div className="p-4 bg-card rounded-xl hover:bg-secondary/50 cursor-pointer transition-colors">
+                    <div className="p-4 bg-muted rounded-xl hover:bg-muted/70 cursor-pointer transition-colors">
                       <div className="flex items-start gap-3">
                         <MapPin className="w-5 h-5 text-muted-foreground mt-1" />
                         <div>
-                          <p className="font-semibold">Office</p>
+                          <p className="font-semibold text-foreground">Office</p>
                           <p className="text-sm text-muted-foreground">
                             Cyber Hub, DLF Phase 2, Gurgaon - 122002
                           </p>
                         </div>
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full border-dashed border-primary/50 text-primary hover:bg-primary/10">
+                    <Button variant="outline" className="w-full border-dashed border-primary text-primary hover:bg-primary/10 font-medium">
                       <Plus className="w-4 h-4 mr-2" /> Add New Address
                     </Button>
                   </div>
@@ -576,23 +563,23 @@ export default function OrderPage() {
                     {orderStatus !== "idle" ? (
                       <div className="space-y-4">
                         <div className="text-center py-4">
-                          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                             <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
                           </div>
-                          <h3 className="text-lg font-bold mb-2">Processing Order</h3>
+                          <h3 className="text-lg font-bold mb-2 text-foreground">Processing Order</h3>
                         </div>
                         
                         <div className="space-y-3">
-                          <div className={`flex items-center gap-3 p-3 rounded-xl ${orderStatus !== "idle" ? "bg-primary/10" : "bg-card"}`}>
+                          <div className={`flex items-center gap-3 p-3 rounded-xl ${orderStatus !== "idle" ? "bg-primary/10" : "bg-muted"}`}>
                             {orderStatus === "processing" ? (
                               <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                             ) : (
                               <CheckCircle className="w-5 h-5 text-primary" />
                             )}
-                            <span className={orderStatus !== "idle" ? "text-primary font-medium" : ""}>Placing order...</span>
+                            <span className={orderStatus !== "idle" ? "text-primary font-medium" : "text-foreground"}>Placing order...</span>
                           </div>
                           
-                          <div className={`flex items-center gap-3 p-3 rounded-xl ${["pharmacy_selected", "confirmed", "preparing"].includes(orderStatus) ? "bg-primary/10" : "bg-card"}`}>
+                          <div className={`flex items-center gap-3 p-3 rounded-xl ${["pharmacy_selected", "confirmed", "preparing"].includes(orderStatus) ? "bg-primary/10" : "bg-muted"}`}>
                             {orderStatus === "pharmacy_selected" ? (
                               <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                             ) : ["confirmed", "preparing"].includes(orderStatus) ? (
@@ -605,7 +592,7 @@ export default function OrderPage() {
                             </span>
                           </div>
                           
-                          <div className={`flex items-center gap-3 p-3 rounded-xl ${["confirmed", "preparing"].includes(orderStatus) ? "bg-primary/10" : "bg-card"}`}>
+                          <div className={`flex items-center gap-3 p-3 rounded-xl ${["confirmed", "preparing"].includes(orderStatus) ? "bg-primary/10" : "bg-muted"}`}>
                             {orderStatus === "confirmed" ? (
                               <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                             ) : orderStatus === "preparing" ? (
@@ -625,14 +612,14 @@ export default function OrderPage() {
                           onClick={() => setPaymentMethod("online")}
                           className={`p-4 rounded-xl cursor-pointer transition-all ${
                             paymentMethod === "online" 
-                              ? "bg-primary/10 border border-primary" 
-                              : "bg-card hover:bg-secondary"
+                              ? "bg-primary/10 border-2 border-primary" 
+                              : "bg-muted hover:bg-muted/70"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <CreditCard className={`w-5 h-5 ${paymentMethod === "online" ? "text-primary" : "text-muted-foreground"}`} />
                             <div className="flex-1">
-                              <p className="font-semibold">Pay Online</p>
+                              <p className="font-semibold text-foreground">Pay Online</p>
                               <p className="text-sm text-muted-foreground">UPI, Cards, Net Banking</p>
                             </div>
                             {paymentMethod === "online" && <CheckCircle className="w-5 h-5 text-primary" />}
@@ -642,14 +629,14 @@ export default function OrderPage() {
                           onClick={() => setPaymentMethod("cod")}
                           className={`p-4 rounded-xl cursor-pointer transition-all ${
                             paymentMethod === "cod" 
-                              ? "bg-primary/10 border border-primary" 
-                              : "bg-card hover:bg-secondary"
+                              ? "bg-primary/10 border-2 border-primary" 
+                              : "bg-muted hover:bg-muted/70"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <Banknote className={`w-5 h-5 ${paymentMethod === "cod" ? "text-primary" : "text-muted-foreground"}`} />
                             <div className="flex-1">
-                              <p className="font-semibold">Cash on Delivery</p>
+                              <p className="font-semibold text-foreground">Cash on Delivery</p>
                               <p className="text-sm text-muted-foreground">Pay when you receive</p>
                             </div>
                             {paymentMethod === "cod" && <CheckCircle className="w-5 h-5 text-primary" />}
@@ -668,32 +655,32 @@ export default function OrderPage() {
                       transition={{ type: "spring", damping: 15 }}
                       className="text-center py-4"
                     >
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center mx-auto mb-4 glow-primary">
-                        <Package className="w-10 h-10 text-background" />
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 glow-primary">
+                        <Package className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-2xl font-bold mb-1">Order Confirmed!</h3>
+                      <h3 className="text-2xl font-bold mb-1 text-foreground">Order Confirmed!</h3>
                       <p className="text-muted-foreground">Order #{orderId}</p>
                     </motion.div>
                     
-                    <div className="glass-card rounded-2xl p-4">
+                    <div className="glass-card rounded-2xl p-4 bg-muted/50">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
                           <Truck className="w-6 h-6 text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold">Estimated Delivery</p>
+                          <p className="font-semibold text-foreground">Estimated Delivery</p>
                           <p className="text-lg text-primary font-bold">{selectedPharmacy?.deliveryTime || "15 min"}</p>
                         </div>
                       </div>
                       
-                      <div className="space-y-3 pt-4 border-t border-border/50">
+                      <div className="space-y-3 pt-4 border-t border-border">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                             <Shield className="w-4 h-4 text-accent" />
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">From</p>
-                            <p className="font-medium">{selectedPharmacy?.name}</p>
+                            <p className="font-medium text-foreground">{selectedPharmacy?.name}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -702,14 +689,14 @@ export default function OrderPage() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">To</p>
-                            <p className="font-medium">{userLocation.address}</p>
+                            <p className="font-medium text-foreground">{userLocation.address}</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <Link href={`/track?orderId=${orderId}`}>
-                      <Button className="w-full bg-gradient-to-r from-primary to-emerald-400 text-background font-bold py-6">
+                      <Button className="w-full btn-primary-gradient font-bold py-6">
                         Track Order Live <ChevronRight className="w-5 h-5 ml-2" />
                       </Button>
                     </Link>
@@ -718,24 +705,24 @@ export default function OrderPage() {
               </ScrollArea>
 
               {checkoutStep < 3 && cart.length > 0 && orderStatus === "idle" && (
-                <div className="p-6 border-t border-border/50 bg-card/50">
+                <div className="p-6 border-t border-border bg-white">
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>₹{cartTotal}</span>
+                      <span className="text-foreground">₹{cartTotal}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Delivery Fee</span>
-                      <span>₹{selectedPharmacy?.deliveryFee || 25}</span>
+                      <span className="text-foreground">₹{selectedPharmacy?.deliveryFee || 25}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t border-border/50">
-                      <span>Total</span>
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
+                      <span className="text-foreground">Total</span>
                       <span className="text-primary">₹{cartTotal + (selectedPharmacy?.deliveryFee || 25)}</span>
                     </div>
                   </div>
                   <Button 
                     onClick={() => checkoutStep < 2 ? setCheckoutStep(checkoutStep + 1) : handlePlaceOrder()}
-                    className="w-full bg-gradient-to-r from-primary to-emerald-400 text-background font-bold py-6"
+                    className="w-full btn-primary-gradient font-bold py-6"
                   >
                     {checkoutStep === 0 && "Proceed to Checkout"}
                     {checkoutStep === 1 && "Continue to Payment"}

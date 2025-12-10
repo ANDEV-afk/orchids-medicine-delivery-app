@@ -46,71 +46,71 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #050508;
-  --foreground: #fafafa;
-  --card: #0c0c12;
-  --card-foreground: #fafafa;
-  --popover: #0c0c12;
-  --popover-foreground: #fafafa;
-  --primary: #10b981;
-  --primary-foreground: #050508;
-  --secondary: #151520;
-  --secondary-foreground: #fafafa;
-  --muted: #151520;
-  --muted-foreground: #71717a;
-  --accent: #f97316;
-  --accent-foreground: #050508;
+  --background: #f8fafb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --secondary: #e0f2fe;
+  --secondary-foreground: #0369a1;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #0ea5e9;
+  --accent-foreground: #ffffff;
   --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: #10b981;
-  --chart-1: #10b981;
-  --chart-2: #f97316;
-  --chart-3: #06b6d4;
-  --chart-4: #fbbf24;
-  --chart-5: #a855f7;
-  --sidebar: #080810;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #10b981;
-  --sidebar-primary-foreground: #050508;
-  --sidebar-accent: #151520;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #10b981;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #059669;
+  --chart-1: #059669;
+  --chart-2: #0ea5e9;
+  --chart-3: #10b981;
+  --chart-4: #06b6d4;
+  --chart-5: #14b8a6;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #059669;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0f2fe;
+  --sidebar-accent-foreground: #0369a1;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #059669;
 }
 
 .dark {
-  --background: #050508;
-  --foreground: #fafafa;
-  --card: #0c0c12;
-  --card-foreground: #fafafa;
-  --popover: #0c0c12;
-  --popover-foreground: #fafafa;
-  --primary: #10b981;
-  --primary-foreground: #050508;
-  --secondary: #151520;
-  --secondary-foreground: #fafafa;
-  --muted: #151520;
-  --muted-foreground: #71717a;
-  --accent: #f97316;
-  --accent-foreground: #050508;
+  --background: #f8fafb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --secondary: #e0f2fe;
+  --secondary-foreground: #0369a1;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #0ea5e9;
+  --accent-foreground: #ffffff;
   --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: #10b981;
-  --chart-1: #10b981;
-  --chart-2: #f97316;
-  --chart-3: #06b6d4;
-  --chart-4: #fbbf24;
-  --chart-5: #a855f7;
-  --sidebar: #080810;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #10b981;
-  --sidebar-primary-foreground: #050508;
-  --sidebar-accent: #151520;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #10b981;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #059669;
+  --chart-1: #059669;
+  --chart-2: #0ea5e9;
+  --chart-3: #10b981;
+  --chart-4: #06b6d4;
+  --chart-5: #14b8a6;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #059669;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0f2fe;
+  --sidebar-accent-foreground: #0369a1;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #059669;
 }
 
 @layer base {
@@ -124,7 +124,7 @@
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 40%, #f97316 100%);
+  background: linear-gradient(135deg, #059669 0%, #0ea5e9 50%, #06b6d4 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -138,25 +138,27 @@
 }
 
 .glass-card {
-  background: rgba(12, 12, 18, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .glow-primary {
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.25), 0 0 80px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 30px rgba(5, 150, 105, 0.2), 0 0 60px rgba(5, 150, 105, 0.1);
 }
 
 .glow-accent {
-  box-shadow: 0 0 40px rgba(249, 115, 22, 0.25), 0 0 80px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.2), 0 0 60px rgba(14, 165, 233, 0.1);
 }
 
 .mesh-gradient {
   background: 
-    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(16, 185, 129, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 30% at 10% 60%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 40% at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(5, 150, 105, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(14, 165, 233, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 10% 60%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 40% at 90% 80%, rgba(5, 150, 105, 0.04) 0%, transparent 50%),
+    linear-gradient(to bottom, #f8fafb, #ffffff);
 }
 
 .pulse-dot {
@@ -164,8 +166,8 @@
 }
 
 @keyframes pulse-animation {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+  50% { box-shadow: 0 0 0 12px rgba(5, 150, 105, 0); }
 }
 
 .float-animation {
@@ -187,7 +189,7 @@
 }
 
 .ai-thinking {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.2) 50%, rgba(16, 185, 129, 0.1) 100%);
+  background: linear-gradient(90deg, rgba(5, 150, 105, 0.08) 0%, rgba(14, 165, 233, 0.12) 50%, rgba(5, 150, 105, 0.08) 100%);
   background-size: 200% 100%;
   animation: aiThink 1.5s ease-in-out infinite;
 }
@@ -203,11 +205,11 @@
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
 .progress-bar-animated {
-  background: linear-gradient(90deg, #10b981 0%, #06b6d4 50%, #10b981 100%);
+  background: linear-gradient(90deg, #059669 0%, #0ea5e9 50%, #059669 100%);
   background-size: 200% 100%;
   animation: progressFlow 2s linear infinite;
 }
@@ -218,11 +220,43 @@
 }
 
 .verified-badge {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #059669 0%, #0ea5e9 100%);
 }
 
 .new-badge {
-  background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+}
+
+.medicine-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(240, 253, 250, 0.8) 100%);
+  border: 1px solid rgba(5, 150, 105, 0.1);
+}
+
+.medicine-card:hover {
+  border-color: rgba(5, 150, 105, 0.3);
+  box-shadow: 0 8px 30px rgba(5, 150, 105, 0.12);
+}
+
+.btn-primary-gradient {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-gradient:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3);
+}
+
+.btn-accent-gradient {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-accent-gradient:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
 }
 
 nextjs-portal {

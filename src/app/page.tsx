@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Pill, Truck, Clock, Shield, Store, ChevronRight, Search, MapPin, 
-  Star, Zap, Brain, BadgeCheck, TrendingUp, Users, Package
+  Star, Zap, Brain, BadgeCheck, TrendingUp, Package, Plus, ShoppingCart
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { getPharmaciesWithDistances, type Pharmacy, subscribeToPharmacies } from "@/lib/pharmacy-store";
+import { getFeaturedMedicines, type Medicine } from "@/lib/medicines-store";
 
 const stats = [
   { value: "500+", label: "Partner Pharmacies", icon: Store },
@@ -29,6 +31,7 @@ const userLocation = { lat: 28.6139, lng: 77.2090 };
 
 export default function Home() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [featuredMedicines, setFeaturedMedicines] = useState<Medicine[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -37,36 +40,37 @@ export default function Home() {
       setPharmacies(pharmaciesWithDistance.slice(0, 6));
     };
     loadPharmacies();
+    setFeaturedMedicines(getFeaturedMedicines());
     const unsubscribe = subscribeToPharmacies(loadPharmacies);
     return () => unsubscribe();
   }, []);
 
   return (
     <div className="min-h-screen bg-background mesh-gradient">
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-background" />
+              <Pill className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">MedRush</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/order" className="text-muted-foreground hover:text-foreground transition-colors">Order Medicine</Link>
-            <Link href="/track" className="text-muted-foreground hover:text-foreground transition-colors">Track Order</Link>
-            <Link href="/pharmacy/onboarding" className="text-muted-foreground hover:text-foreground transition-colors">Partner with Us</Link>
+            <Link href="/order" className="text-muted-foreground hover:text-primary transition-colors font-medium">Order Medicine</Link>
+            <Link href="/track" className="text-muted-foreground hover:text-primary transition-colors font-medium">Track Order</Link>
+            <Link href="/pharmacy/onboarding" className="text-muted-foreground hover:text-primary transition-colors font-medium">Partner with Us</Link>
           </div>
           
           <div className="flex items-center gap-3">
             <Link href="/pharmacy/onboarding">
-              <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 hidden sm:flex">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white hidden sm:flex font-medium">
                 <Store className="w-4 h-4 mr-2" />
                 For Pharmacies
               </Button>
             </Link>
             <Link href="/order">
-              <Button className="bg-gradient-to-r from-primary to-emerald-400 hover:opacity-90 text-background font-semibold">
+              <Button className="btn-primary-gradient font-semibold px-6">
                 Order Now
               </Button>
             </Link>
@@ -92,7 +96,7 @@ export default function Home() {
               <span className="text-sm text-primary font-medium">AI-Powered Smart Inventory System</span>
             </motion.div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight text-foreground">
               Medicine Delivery{" "}
               <span className="gradient-text">Reimagined</span>
             </h1>
@@ -112,13 +116,13 @@ export default function Home() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input 
                   placeholder="Search medicines, vitamins, health products..." 
-                  className="pl-12 pr-4 py-6 text-lg bg-card/50 border-border/50 rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="pl-12 pr-4 py-6 text-lg bg-white border-border rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <Link href="/order">
-                <Button size="lg" className="px-10 py-6 bg-gradient-to-r from-primary to-emerald-400 hover:opacity-90 text-background font-bold rounded-2xl text-lg">
+                <Button size="lg" className="px-10 py-6 btn-primary-gradient font-bold rounded-2xl text-lg">
                   Get Started <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -150,6 +154,74 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="py-20 px-6 bg-gradient-to-b from-transparent to-secondary/30">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex items-center justify-between mb-10"
+          >
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">Featured Medicines</h2>
+              <p className="text-muted-foreground">
+                Top selling medicines at the best prices
+              </p>
+            </div>
+            <Link href="/order">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-medium">
+                View All <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {featuredMedicines.map((medicine, i) => {
+              const discount = Math.round((1 - medicine.price / medicine.originalPrice) * 100);
+              return (
+                <motion.div
+                  key={medicine.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="medicine-card rounded-2xl overflow-hidden group card-hover bg-white"
+                >
+                  <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-white overflow-hidden">
+                    <img 
+                      src={medicine.image} 
+                      alt={medicine.name}
+                      className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500"
+                    />
+                    {discount > 0 && (
+                      <Badge className="absolute top-2 left-2 bg-accent text-white border-0 font-bold">
+                        {discount}% OFF
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-xs text-muted-foreground mb-1">{medicine.brand}</p>
+                    <h3 className="font-semibold text-sm mb-2 line-clamp-1 text-foreground">{medicine.name}</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg font-bold text-primary">₹{medicine.price}</span>
+                      <span className="text-sm text-muted-foreground line-through">₹{medicine.originalPrice}</span>
+                    </div>
+                    <Link href="/order">
+                      <Button
+                        className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all font-semibold"
+                        size="sm"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add to Cart
+                      </Button>
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -158,7 +230,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">Why Choose <span className="gradient-text">MedRush</span>?</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">Why Choose <span className="gradient-text">MedRush</span>?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               The most advanced medicine delivery platform powered by AI
             </p>
@@ -172,12 +244,12 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card rounded-2xl p-6 card-hover group"
+                className="glass-card rounded-2xl p-6 card-hover group bg-white"
               >
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5 group-hover:glow-primary transition-all">
                   <feature.icon className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
               </motion.div>
             ))}
@@ -185,7 +257,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-gradient-to-b from-transparent to-card/30">
+      <section className="py-20 px-6 bg-gradient-to-b from-transparent to-secondary/30">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -194,13 +266,13 @@ export default function Home() {
             className="flex items-center justify-between mb-10"
           >
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">Partner Pharmacies</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">Partner Pharmacies</h2>
               <p className="text-muted-foreground">
                 {pharmacies.length}+ verified pharmacies in Delhi NCR
               </p>
             </div>
             <Link href="/order">
-              <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-medium">
                 View All <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
@@ -214,7 +286,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card rounded-2xl overflow-hidden card-hover group cursor-pointer"
+                className="glass-card rounded-2xl overflow-hidden card-hover group cursor-pointer bg-white"
               >
                 <div className="h-36 overflow-hidden relative">
                   <img 
@@ -222,7 +294,7 @@ export default function Home() {
                     alt={pharmacy.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 to-transparent" />
                   {!pharmacy.isVerified && (
                     <span className="absolute top-3 right-3 new-badge text-xs px-2.5 py-1 rounded-full text-white font-medium">
                       NEW
@@ -233,7 +305,7 @@ export default function Home() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold line-clamp-1">{pharmacy.name}</h3>
+                        <h3 className="font-bold line-clamp-1 text-foreground">{pharmacy.name}</h3>
                         {pharmacy.isVerified && (
                           <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
                         )}
@@ -248,15 +320,15 @@ export default function Home() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4 text-primary" />
-                      {pharmacy.distance}
+                      <span className="text-foreground font-medium">{pharmacy.distance}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4 text-accent" />
-                      {pharmacy.deliveryTime}
+                      <span className="text-foreground font-medium">{pharmacy.deliveryTime}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Truck className="w-4 h-4" />
-                      ₹{pharmacy.deliveryFee}
+                      <Truck className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-foreground font-medium">₹{pharmacy.deliveryFee}</span>
                     </div>
                   </div>
                 </div>
@@ -272,11 +344,11 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="glass-card rounded-3xl p-10 md:p-16 relative overflow-hidden"
+            className="glass-card rounded-3xl p-10 md:p-16 relative overflow-hidden bg-white"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
             
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
               <div className="flex-1 text-center md:text-left">
@@ -284,46 +356,46 @@ export default function Home() {
                   <TrendingUp className="w-4 h-4 text-accent" />
                   <span className="text-sm text-accent font-medium">Grow your business 40%</span>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-bold mb-4">Own a Pharmacy?</h2>
+                <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">Own a Pharmacy?</h2>
                 <p className="text-muted-foreground max-w-xl mb-8 leading-relaxed">
                   Join our network of 500+ pharmacies in Delhi NCR. Get access to thousands of customers, 
                   smart inventory management, and daily settlements.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                   <Link href="/pharmacy/onboarding">
-                    <Button size="lg" className="px-10 py-6 bg-gradient-to-r from-primary to-emerald-400 hover:opacity-90 text-background font-bold rounded-2xl">
+                    <Button size="lg" className="px-10 py-6 btn-primary-gradient font-bold rounded-2xl">
                       Partner with Us <ChevronRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
                   <Link href="/pharmacy/dashboard">
-                    <Button size="lg" variant="outline" className="px-8 py-6 border-primary/50 text-primary hover:bg-primary/10 rounded-2xl">
+                    <Button size="lg" variant="outline" className="px-8 py-6 border-primary text-primary hover:bg-primary hover:text-white rounded-2xl font-medium">
                       View Dashboard
                     </Button>
                   </Link>
                 </div>
               </div>
               <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary float-animation">
-                <Store className="w-16 h-16 md:w-24 md:h-24 text-background" />
+                <Store className="w-16 h-16 md:w-24 md:h-24 text-white" />
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <footer className="py-12 px-6 border-t border-border/50">
+      <footer className="py-12 px-6 border-t border-border bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Pill className="w-5 h-5 text-background" />
+                <Pill className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold gradient-text">MedRush</span>
             </div>
             <div className="flex items-center gap-8 text-muted-foreground">
-              <Link href="/order" className="hover:text-foreground transition-colors">Order</Link>
-              <Link href="/track" className="hover:text-foreground transition-colors">Track</Link>
-              <Link href="/pharmacy/onboarding" className="hover:text-foreground transition-colors">Partner</Link>
-              <Link href="/pharmacy/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
+              <Link href="/order" className="hover:text-primary transition-colors font-medium">Order</Link>
+              <Link href="/track" className="hover:text-primary transition-colors font-medium">Track</Link>
+              <Link href="/pharmacy/onboarding" className="hover:text-primary transition-colors font-medium">Partner</Link>
+              <Link href="/pharmacy/dashboard" className="hover:text-primary transition-colors font-medium">Dashboard</Link>
             </div>
             <p className="text-muted-foreground text-sm">© 2024 MedRush. All rights reserved.</p>
           </div>

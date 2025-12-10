@@ -4,13 +4,12 @@ import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Pill, MapPin, Phone, Clock, Package, Truck, Store, 
-  CheckCircle2, ChevronRight, User, Navigation, MessageSquare,
-  Brain, Sparkles, Shield, Zap
+  CheckCircle2, ChevronRight, User, MessageSquare,
+  Brain, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 
 const orderDetails = {
   orderId: "MR12345678",
@@ -86,16 +85,16 @@ function TrackContent() {
 
   return (
     <div className="min-h-screen bg-background mesh-gradient">
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-background" />
+              <Pill className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">MedRush</span>
           </Link>
           <Link href="/order">
-            <Button className="bg-gradient-to-r from-primary to-emerald-400 text-background font-semibold">
+            <Button className="btn-primary-gradient font-semibold">
               Order More
             </Button>
           </Link>
@@ -113,7 +112,7 @@ function TrackContent() {
               <div className="w-2.5 h-2.5 rounded-full bg-primary pulse-dot" />
               <span className="text-sm text-primary font-medium">Live Tracking</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Track Your Order</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">Track Your Order</h1>
             <p className="text-muted-foreground">Order #{orderId}</p>
           </motion.div>
 
@@ -124,13 +123,13 @@ function TrackContent() {
               transition={{ delay: 0.1 }}
               className="lg:col-span-3 space-y-6"
             >
-              <div className="glass-card rounded-3xl overflow-hidden">
-                <div className="h-56 bg-gradient-to-br from-card to-secondary relative overflow-hidden">
+              <div className="glass-card rounded-3xl overflow-hidden bg-white">
+                <div className="h-56 bg-gradient-to-br from-secondary/50 to-white relative overflow-hidden">
                   <div className="absolute inset-0 opacity-30">
                     <div className="absolute inset-0" style={{
                       backgroundImage: `
-                        linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px)
+                        linear-gradient(rgba(5, 150, 105, 0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(5, 150, 105, 0.1) 1px, transparent 1px)
                       `,
                       backgroundSize: '30px 30px'
                     }} />
@@ -149,14 +148,14 @@ function TrackContent() {
                     />
                     <defs>
                       <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#f97316" />
-                        <stop offset="100%" stopColor="#10b981" />
+                        <stop offset="0%" stopColor="#0ea5e9" />
+                        <stop offset="100%" stopColor="#059669" />
                       </linearGradient>
                     </defs>
                   </svg>
 
                   <motion.div
-                    className="absolute bottom-4 left-4 bg-accent/90 backdrop-blur-sm px-3 py-2 rounded-xl"
+                    className="absolute bottom-4 left-4 bg-accent backdrop-blur-sm px-3 py-2 rounded-xl"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5 }}
@@ -168,14 +167,14 @@ function TrackContent() {
                   </motion.div>
                   
                   <motion.div
-                    className="absolute top-4 right-4 bg-primary/90 backdrop-blur-sm px-3 py-2 rounded-xl"
+                    className="absolute top-4 right-4 bg-primary backdrop-blur-sm px-3 py-2 rounded-xl"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.7 }}
                   >
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-background" />
-                      <span className="text-xs text-background font-medium">Your Location</span>
+                      <MapPin className="w-4 h-4 text-white" />
+                      <span className="text-xs text-white font-medium">Your Location</span>
                     </div>
                   </motion.div>
 
@@ -197,8 +196,8 @@ function TrackContent() {
                           transition={{ repeat: Infinity, duration: 1.5 }}
                         >
                           <div className="absolute inset-0 bg-primary/30 rounded-full blur-md scale-150" />
-                          <div className="w-10 h-10 bg-gradient-to-br from-primary to-emerald-400 rounded-full flex items-center justify-center shadow-lg">
-                            <Truck className="w-5 h-5 text-background" />
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg">
+                            <Truck className="w-5 h-5 text-white" />
                           </div>
                         </motion.div>
                       </motion.div>
@@ -222,7 +221,7 @@ function TrackContent() {
                       <span className="text-muted-foreground">Delivery Progress</span>
                       <span className="text-primary font-semibold">{progress}%</span>
                     </div>
-                    <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                       <motion.div 
                         className="h-full progress-bar-animated rounded-full"
                         initial={{ width: 0 }}
@@ -232,14 +231,14 @@ function TrackContent() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50 mt-4">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border mt-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                         <Store className="w-5 h-5 text-accent" />
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">From</p>
-                        <p className="font-medium text-sm line-clamp-1">{orderDetails.pharmacy.name.split(' - ')[0]}</p>
+                        <p className="font-medium text-sm line-clamp-1 text-foreground">{orderDetails.pharmacy.name.split(' - ')[0]}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -248,7 +247,7 @@ function TrackContent() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">To</p>
-                        <p className="font-medium text-sm line-clamp-1">{orderDetails.delivery.address.split(',')[0]}</p>
+                        <p className="font-medium text-sm line-clamp-1 text-foreground">{orderDetails.delivery.address.split(',')[0]}</p>
                       </div>
                     </div>
                   </div>
@@ -259,9 +258,9 @@ function TrackContent() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="glass-card rounded-2xl p-5"
+                  className="glass-card rounded-2xl p-5 bg-white"
                 >
-                  <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <h3 className="font-bold mb-4 flex items-center gap-2 text-foreground">
                     <Truck className="w-5 h-5 text-primary" />
                     Delivery Partner
                   </h3>
@@ -270,17 +269,17 @@ function TrackContent() {
                       <User className="w-7 h-7 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold">{orderDetails.rider.name}</p>
+                      <p className="font-bold text-foreground">{orderDetails.rider.name}</p>
                       <p className="text-sm text-muted-foreground">
                         ⭐ {orderDetails.rider.rating} • {orderDetails.rider.deliveries} deliveries
                       </p>
                       <p className="text-xs text-muted-foreground">{orderDetails.rider.vehicle}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20">
+                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
                         <Phone className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20">
+                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
                         <MessageSquare className="w-4 h-4" />
                       </Button>
                     </div>
@@ -295,8 +294,8 @@ function TrackContent() {
               transition={{ delay: 0.2 }}
               className="lg:col-span-2 space-y-6"
             >
-              <div className="glass-card rounded-2xl p-5">
-                <h3 className="font-bold mb-4">Order Progress</h3>
+              <div className="glass-card rounded-2xl p-5 bg-white">
+                <h3 className="font-bold mb-4 text-foreground">Order Progress</h3>
                 <div className="space-y-1">
                   {trackingSteps.map((step, i) => {
                     const isCompleted = currentStep > step.id;
@@ -317,26 +316,26 @@ function TrackContent() {
                             animate={{ scale: isCompleted || isCurrent ? 1 : 0.8 }}
                             className={`w-10 h-10 rounded-xl flex items-center justify-center z-10 ${
                               isCompleted || isCurrent
-                                ? "bg-gradient-to-br from-primary to-emerald-400"
-                                : "bg-card border border-border/50"
+                                ? "bg-gradient-to-br from-primary to-accent"
+                                : "bg-muted border border-border"
                             }`}
                           >
-                            <Icon className={`w-5 h-5 ${isCompleted || isCurrent ? "text-background" : "text-muted-foreground"}`} />
+                            <Icon className={`w-5 h-5 ${isCompleted || isCurrent ? "text-white" : "text-muted-foreground"}`} />
                           </motion.div>
                           {i < trackingSteps.length - 1 && (
-                            <div className={`w-0.5 h-8 ${isCompleted ? "bg-primary" : "bg-border/50"}`} />
+                            <div className={`w-0.5 h-8 ${isCompleted ? "bg-primary" : "bg-border"}`} />
                           )}
                         </div>
                         <div className="flex-1 pt-2 pb-3">
                           <div className="flex items-center justify-between">
-                            <p className={`font-medium text-sm ${isCurrent ? "text-primary" : ""}`}>{step.title}</p>
+                            <p className={`font-medium text-sm ${isCurrent ? "text-primary" : "text-foreground"}`}>{step.title}</p>
                             {(isCompleted || isCurrent) && step.time && (
                               <span className="text-xs text-muted-foreground">{step.time}</span>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">{step.description}</p>
                           {isCurrent && step.id === 2 && (
-                            <div className="ai-thinking mt-2 rounded-lg px-3 py-1.5 text-xs text-cyan-400 flex items-center gap-2">
+                            <div className="ai-thinking mt-2 rounded-lg px-3 py-1.5 text-xs text-accent flex items-center gap-2">
                               <Sparkles className="w-3 h-3" />
                               AI analyzing pharmacies...
                             </div>
@@ -348,37 +347,37 @@ function TrackContent() {
                 </div>
               </div>
 
-              <div className="glass-card rounded-2xl p-5">
-                <h3 className="font-bold mb-4">Order Summary</h3>
+              <div className="glass-card rounded-2xl p-5 bg-white">
+                <h3 className="font-bold mb-4 text-foreground">Order Summary</h3>
                 <div className="space-y-3 mb-4">
                   {orderDetails.items.map((item, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-sm">{item.name}</p>
+                        <p className="font-medium text-sm text-foreground">{item.name}</p>
                         <p className="text-xs text-muted-foreground">{item.brand} × {item.quantity}</p>
                       </div>
-                      <span className="font-semibold">₹{item.price * item.quantity}</span>
+                      <span className="font-semibold text-foreground">₹{item.price * item.quantity}</span>
                     </div>
                   ))}
                 </div>
-                <div className="space-y-2 pt-4 border-t border-border/50">
+                <div className="space-y-2 pt-4 border-t border-border">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>₹{subtotal}</span>
+                    <span className="text-foreground">₹{subtotal}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Delivery Fee</span>
-                    <span>₹{orderDetails.delivery.fee}</span>
+                    <span className="text-foreground">₹{orderDetails.delivery.fee}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg pt-2">
-                    <span>Total</span>
+                    <span className="text-foreground">Total</span>
                     <span className="text-primary">₹{total}</span>
                   </div>
                 </div>
               </div>
 
               <Link href="/order">
-                <Button className="w-full bg-gradient-to-r from-primary to-emerald-400 text-background font-bold py-5">
+                <Button className="w-full btn-primary-gradient font-bold py-5">
                   Order More Medicines <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>

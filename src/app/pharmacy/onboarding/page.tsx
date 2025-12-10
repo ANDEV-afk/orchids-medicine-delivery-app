@@ -121,46 +121,46 @@ export default function PharmacyOnboarding() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-card rounded-3xl p-10 text-center max-w-lg"
+          className="glass-card rounded-3xl p-10 text-center max-w-lg bg-white"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", damping: 15, delay: 0.2 }}
-            className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center mx-auto mb-6 glow-primary"
+            className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-6 glow-primary"
           >
-            <CheckCircle2 className="w-12 h-12 text-background" />
+            <CheckCircle2 className="w-12 h-12 text-white" />
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h1 className="text-3xl font-bold mb-2">Welcome to MedRush!</h1>
+            <h1 className="text-3xl font-bold mb-2 text-foreground">Welcome to MedRush!</h1>
             <p className="text-primary font-semibold mb-4">{formData.pharmacyName}</p>
             <p className="text-muted-foreground mb-8">
               Your pharmacy is now visible to customers in {formData.area}. 
               Start receiving orders immediately!
             </p>
-            <div className="glass-card rounded-xl p-4 mb-6 text-left">
+            <div className="glass-card rounded-xl p-4 mb-6 text-left bg-muted/50">
               <div className="flex items-center gap-3 mb-3">
                 <BadgeCheck className="w-5 h-5 text-accent" />
-                <span className="text-sm">Pending verification (1-2 business days)</span>
+                <span className="text-sm text-foreground">Pending verification (1-2 business days)</span>
               </div>
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-primary" />
-                <span className="text-sm">Your pharmacy is now live for customers</span>
+                <span className="text-sm text-foreground">Your pharmacy is now live for customers</span>
               </div>
             </div>
             <div className="flex flex-col gap-3">
               <Link href="/order">
-                <Button className="w-full bg-gradient-to-r from-primary to-emerald-400 text-background font-bold py-6">
+                <Button className="w-full btn-primary-gradient font-bold py-6">
                   View Your Pharmacy Live
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Link href="/pharmacy/dashboard">
-                <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10 py-6">
+                <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-white py-6 font-medium">
                   Go to Dashboard
                 </Button>
               </Link>
@@ -173,16 +173,16 @@ export default function PharmacyOnboarding() {
 
   return (
     <div className="min-h-screen bg-background mesh-gradient">
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-background" />
+              <Pill className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">MedRush</span>
           </Link>
           <Link href="/">
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" className="text-muted-foreground hover:text-primary font-medium">
               Back to Home
             </Button>
           </Link>
@@ -200,7 +200,7 @@ export default function PharmacyOnboarding() {
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm text-primary font-medium">Join 500+ Delhi NCR Pharmacies</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
               Partner with <span className="gradient-text">MedRush</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -215,12 +215,12 @@ export default function PharmacyOnboarding() {
             className="grid md:grid-cols-3 gap-4 mb-12"
           >
             {benefits.map((benefit, i) => (
-              <div key={i} className="glass-card rounded-2xl p-5 flex items-center gap-4">
+              <div key={i} className="glass-card rounded-2xl p-5 flex items-center gap-4 bg-white">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
                   <benefit.icon className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{benefit.title}</p>
+                  <p className="font-semibold text-foreground">{benefit.title}</p>
                   <p className="text-sm text-muted-foreground">{benefit.desc}</p>
                 </div>
               </div>
@@ -236,18 +236,18 @@ export default function PharmacyOnboarding() {
                     animate={{ scale: currentStep >= step.id ? 1 : 0.8 }}
                     className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
                       currentStep >= step.id
-                        ? "bg-gradient-to-br from-primary to-emerald-400 glow-primary"
-                        : "bg-card border border-border/50"
+                        ? "bg-gradient-to-br from-primary to-accent glow-primary"
+                        : "bg-white border border-border"
                     }`}
                   >
-                    <step.icon className={`w-6 h-6 ${currentStep >= step.id ? "text-background" : "text-muted-foreground"}`} />
+                    <step.icon className={`w-6 h-6 ${currentStep >= step.id ? "text-white" : "text-muted-foreground"}`} />
                   </motion.div>
                   <span className={`mt-2 text-sm font-medium ${currentStep >= step.id ? "text-foreground" : "text-muted-foreground"}`}>
                     {step.title}
                   </span>
                 </div>
                 {i < steps.length - 1 && (
-                  <div className={`w-16 md:w-24 h-1 mx-3 rounded-full ${currentStep > step.id ? "bg-primary" : "bg-card"}`} />
+                  <div className={`w-16 md:w-24 h-1 mx-3 rounded-full ${currentStep > step.id ? "bg-primary" : "bg-muted"}`} />
                 )}
               </div>
             ))}
@@ -258,7 +258,7 @@ export default function PharmacyOnboarding() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="glass-card rounded-3xl p-8 md:p-12"
+            className="glass-card rounded-3xl p-8 md:p-12 bg-white"
           >
             <AnimatePresence mode="wait">
               {currentStep === 1 && (
