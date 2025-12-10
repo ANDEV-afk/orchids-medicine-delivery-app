@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Store, Pill, ChevronRight, ChevronLeft, Upload, MapPin, 
+  Store, ChevronRight, ChevronLeft, Upload, MapPin, 
   Phone, Mail, Building, FileCheck, Clock, CheckCircle2, User,
   Sparkles, BadgeCheck, Shield, Zap, TrendingUp
 } from "lucide-react";
@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { addPharmacy } from "@/lib/pharmacy-store";
+import { DoseuppLogo } from "@/components/DoseuppLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const steps = [
   { id: 1, title: "Basic Info", icon: Store },
@@ -121,7 +123,7 @@ export default function PharmacyOnboarding() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-card rounded-3xl p-10 text-center max-w-lg bg-white"
+          className="glass-card rounded-3xl p-10 text-center max-w-lg"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -136,13 +138,13 @@ export default function PharmacyOnboarding() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h1 className="text-3xl font-bold mb-2 text-foreground">Welcome to MedRush!</h1>
+            <h1 className="text-3xl font-bold mb-2 text-foreground">Welcome to Doseupp!</h1>
             <p className="text-primary font-semibold mb-4">{formData.pharmacyName}</p>
             <p className="text-muted-foreground mb-8">
               Your pharmacy is now visible to customers in {formData.area}. 
               Start receiving orders immediately!
             </p>
-            <div className="glass-card rounded-xl p-4 mb-6 text-left bg-muted/50">
+            <div className="glass-card rounded-xl p-4 mb-6 text-left">
               <div className="flex items-center gap-3 mb-3">
                 <BadgeCheck className="w-5 h-5 text-accent" />
                 <span className="text-sm text-foreground">Pending verification (1-2 business days)</span>
@@ -175,17 +177,17 @@ export default function PharmacyOnboarding() {
     <div className="min-h-screen bg-background mesh-gradient">
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold gradient-text">MedRush</span>
-          </Link>
           <Link href="/">
-            <Button variant="ghost" className="text-muted-foreground hover:text-primary font-medium">
-              Back to Home
-            </Button>
+            <DoseuppLogo size="md" />
           </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary font-medium">
+                Back to Home
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -201,7 +203,7 @@ export default function PharmacyOnboarding() {
               <span className="text-sm text-primary font-medium">Join 500+ Delhi NCR Pharmacies</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Partner with <span className="gradient-text">MedRush</span>
+              Partner with <span className="gradient-text">Doseupp</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Reach thousands of customers, increase your revenue, and grow your pharmacy business

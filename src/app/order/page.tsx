@@ -4,15 +4,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, MapPin, Star, Clock, Plus, Minus, ShoppingCart, 
-  Pill, ChevronRight, X, SlidersHorizontal, Truck,
+  ChevronRight, X, SlidersHorizontal, Truck,
   CreditCard, Banknote, Check, Package, Sparkles, Brain,
-  CheckCircle, Navigation, Zap, Shield, BadgeCheck
+  CheckCircle, Navigation, Zap, Shield, BadgeCheck, Trash2,
+  Gift, Percent, Heart, Share2
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DoseuppLogo } from "@/components/DoseuppLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getPharmaciesWithDistances, findNearestPharmacyWithStock, type Pharmacy, subscribeToPharmacies } from "@/lib/pharmacy-store";
 import { medicines, categories, type Medicine } from "@/lib/medicines-store";
 
@@ -22,6 +25,7 @@ type CartItem = {
   brand: string;
   price: number;
   quantity: number;
+  image: string;
 };
 
 type OrderStatus = "idle" | "processing" | "pharmacy_selected" | "confirmed" | "preparing" | "out_for_delivery";
@@ -41,6 +45,9 @@ export default function OrderPage() {
   const [aiSelecting, setAiSelecting] = useState(false);
   const [showAllPharmacies, setShowAllPharmacies] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [cartAnimation, setCartAnimation] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
 
   useEffect(() => {
     const loadPharmacies = () => {
@@ -63,6 +70,9 @@ export default function OrderPage() {
   });
 
   const addToCart = (medicine: Medicine) => {
+    setCartAnimation(true);
+    setTimeout(() => setCartAnimation(false), 500);
+    
     setCart(prev => {
       const existing = prev.find(item => item.id === medicine.id);
       if (existing) {
@@ -70,7 +80,14 @@ export default function OrderPage() {
           item.id === medicine.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { id: medicine.id, name: medicine.name, brand: medicine.brand, price: medicine.price, quantity: 1 }];
+      return [...prev, { 
+        id: medicine.id, 
+        name: medicine.name, 
+        brand: medicine.brand, 
+        price: medicine.price, 
+        quantity: 1,
+        image: medicine.image 
+      }];
     });
   };
 
@@ -86,12 +103,18 @@ export default function OrderPage() {
     });
   };
 
+  const deleteFromCart = (id: number) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
   const getItemQuantity = (id: number) => {
     return cart.find(item => item.id === id)?.quantity || 0;
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const discount = promoApplied ? Math.round(cartTotal * 0.1) : 0;
+  const finalTotal = cartTotal - discount + (selectedPharmacy?.deliveryFee || 25);
 
   const handleAISelectPharmacy = async () => {
     setAiSelecting(true);
@@ -106,9 +129,15 @@ export default function OrderPage() {
     setAiSelecting(false);
   };
 
+  const handleApplyPromo = () => {
+    if (promoCode.toLowerCase() === "health10" || promoCode.toLowerCase() === "first") {
+      setPromoApplied(true);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     setOrderStatus("processing");
-    setOrderId(`MR${Date.now().toString().slice(-8)}`);
+    setOrderId(`DU${Date.now().toString().slice(-8)}`);
     
     await new Promise(resolve => setTimeout(resolve, 1500));
     setOrderStatus("pharmacy_selected");
@@ -128,39 +157,44 @@ export default function OrderPage() {
     <div className="min-h-screen bg-background mesh-gradient">
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold gradient-text">MedRush</span>
+          <Link href="/">
+            <DoseuppLogo size="md" />
           </Link>
           
           <div className="relative flex-1 max-w-xl mx-8">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 
               placeholder="Search medicines, brands..." 
-              className="pl-12 bg-white border-border rounded-xl focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+              className="pl-12 bg-card border-border rounded-xl focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           
-          <Button
-            onClick={() => setIsCartOpen(true)}
-            className="relative btn-primary-gradient font-semibold"
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Cart
-            {cartCount > 0 && (
-              <motion.span 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent text-white text-xs flex items-center justify-center font-bold"
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <motion.div
+              animate={cartAnimation ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Button
+                onClick={() => setIsCartOpen(true)}
+                className="relative btn-primary-gradient font-semibold"
               >
-                {cartCount}
-              </motion.span>
-            )}
-          </Button>
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Cart
+                {cartCount > 0 && (
+                  <motion.span 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent text-white text-xs flex items-center justify-center font-bold"
+                  >
+                    {cartCount}
+                  </motion.span>
+                )}
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </nav>
 
@@ -177,11 +211,13 @@ export default function OrderPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setSelectedCategory(cat.name)}
                 className={`flex items-center gap-2 px-5 py-3 rounded-2xl whitespace-nowrap transition-all font-medium ${
                   selectedCategory === cat.name 
                     ? "btn-primary-gradient shadow-lg glow-primary" 
-                    : "bg-white border border-border hover:border-primary/50 hover:bg-primary/5 text-foreground"
+                    : "bg-card border border-border hover:border-primary/50 hover:bg-primary/5 text-foreground"
                 }`}
               >
                 <span className="text-lg">{cat.icon}</span>
@@ -268,8 +304,9 @@ export default function OrderPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
                     onClick={() => setSelectedPharmacy(pharmacy)}
-                    className={`glass-card rounded-2xl p-4 cursor-pointer transition-all card-hover bg-white ${
+                    className={`glass-card rounded-2xl p-4 cursor-pointer transition-all ${
                       selectedPharmacy?.id === pharmacy.id 
                         ? "border-2 border-primary glow-primary" 
                         : "border border-border hover:border-primary/30"
@@ -347,9 +384,10 @@ export default function OrderPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.02 }}
-                    className="medicine-card rounded-2xl overflow-hidden group card-hover bg-white"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="medicine-card rounded-2xl overflow-hidden group"
                   >
-                    <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-white overflow-hidden">
+                    <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-card overflow-hidden">
                       <img 
                         src={medicine.image} 
                         alt={medicine.name}
@@ -365,6 +403,13 @@ export default function OrderPage() {
                           Rx
                         </Badge>
                       )}
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-white/90 dark:bg-card/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Heart className="w-4 h-4 text-primary" />
+                      </motion.button>
                     </div>
                     <div className="p-4">
                       <p className="text-xs text-muted-foreground mb-1">{medicine.brand}</p>
@@ -434,7 +479,7 @@ export default function OrderPage() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed top-0 right-0 h-full w-full max-w-md glass-card z-50 flex flex-col bg-white border-l border-border"
+              className="fixed top-0 right-0 h-full w-full max-w-md glass-card z-50 flex flex-col border-l border-border"
             >
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div>
@@ -445,7 +490,7 @@ export default function OrderPage() {
                     {checkoutStep === 3 && "Order Tracking"}
                   </h2>
                   {checkoutStep === 0 && cart.length > 0 && (
-                    <p className="text-sm text-muted-foreground">{cartCount} items</p>
+                    <p className="text-sm text-muted-foreground">{cartCount} items • ₹{cartTotal}</p>
                   )}
                 </div>
                 <Button
@@ -463,9 +508,13 @@ export default function OrderPage() {
                   <>
                     {cart.length === 0 ? (
                       <div className="text-center py-16">
-                        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4"
+                        >
                           <ShoppingCart className="w-10 h-10 text-muted-foreground" />
-                        </div>
+                        </motion.div>
                         <p className="text-muted-foreground mb-4">Your cart is empty</p>
                         <Button 
                           onClick={() => setIsCartOpen(false)}
@@ -477,51 +526,105 @@ export default function OrderPage() {
                     ) : (
                       <div className="space-y-4">
                         {selectedPharmacy && (
-                          <div className="p-4 rounded-xl bg-primary/10 border border-primary/30 mb-4">
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 rounded-xl bg-primary/10 border border-primary/30"
+                          >
                             <div className="flex items-center gap-2 mb-2">
                               <Zap className="w-4 h-4 text-primary" />
                               <span className="text-sm font-semibold text-primary">Delivering from</span>
                             </div>
                             <p className="font-semibold text-foreground">{selectedPharmacy.name}</p>
                             <p className="text-sm text-muted-foreground">{selectedPharmacy.distance} away • {selectedPharmacy.deliveryTime}</p>
-                          </div>
+                          </motion.div>
                         )}
                         
-                        {cart.map((item) => (
+                        {cart.map((item, index) => (
                           <motion.div 
                             key={item.id}
                             layout
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="flex items-center gap-4 p-4 bg-muted rounded-xl"
+                            transition={{ delay: index * 0.05 }}
+                            className="flex items-center gap-4 p-4 bg-muted rounded-xl group"
                           >
-                            <div className="flex-1">
-                              <p className="text-xs text-muted-foreground">{item.brand}</p>
-                              <p className="font-semibold text-foreground">{item.name}</p>
-                              <p className="text-primary font-bold">₹{item.price}</p>
+                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-card flex-shrink-0">
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                             </div>
-                            <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-border">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeFromCart(item.id)}
-                                className="h-7 w-7 p-0 hover:bg-muted text-foreground"
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-muted-foreground">{item.brand}</p>
+                              <p className="font-semibold text-foreground truncate">{item.name}</p>
+                              <p className="text-primary font-bold">₹{item.price} × {item.quantity}</p>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => deleteFromCart(item.id)}
+                                className="text-destructive hover:bg-destructive/10 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                               >
-                                <Minus className="w-3 h-3" />
-                              </Button>
-                              <span className="w-6 text-center font-bold text-foreground">{item.quantity}</span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => addToCart(medicines.find(m => m.id === item.id)!)}
-                                className="h-7 w-7 p-0 hover:bg-muted text-foreground"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                              <div className="flex items-center gap-2 bg-card rounded-lg p-1 border border-border">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => removeFromCart(item.id)}
+                                  className="h-7 w-7 p-0 hover:bg-muted text-foreground"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </Button>
+                                <span className="w-6 text-center font-bold text-foreground">{item.quantity}</span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => addToCart(medicines.find(m => m.id === item.id)!)}
+                                  className="h-7 w-7 p-0 hover:bg-muted text-foreground"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </Button>
+                              </div>
                             </div>
                           </motion.div>
                         ))}
+
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="mt-6 p-4 rounded-xl bg-card border border-border"
+                        >
+                          <div className="flex items-center gap-2 mb-3">
+                            <Gift className="w-4 h-4 text-primary" />
+                            <span className="font-semibold text-foreground">Have a promo code?</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Enter code (try HEALTH10)"
+                              value={promoCode}
+                              onChange={(e) => setPromoCode(e.target.value)}
+                              className="flex-1 bg-muted border-border text-foreground"
+                              disabled={promoApplied}
+                            />
+                            <Button 
+                              onClick={handleApplyPromo}
+                              disabled={promoApplied || !promoCode}
+                              className={promoApplied ? "bg-green-500 hover:bg-green-500" : "bg-primary/10 text-primary hover:bg-primary hover:text-white"}
+                            >
+                              {promoApplied ? <Check className="w-4 h-4" /> : "Apply"}
+                            </Button>
+                          </div>
+                          {promoApplied && (
+                            <motion.p 
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-sm text-green-500 mt-2 flex items-center gap-1"
+                            >
+                              <Percent className="w-3 h-3" /> 10% discount applied!
+                            </motion.p>
+                          )}
+                        </motion.div>
                       </div>
                     )}
                   </>
@@ -529,7 +632,11 @@ export default function OrderPage() {
 
                 {checkoutStep === 1 && (
                   <div className="space-y-4">
-                    <div className="p-4 bg-primary/10 rounded-xl border border-primary/30">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-primary/10 rounded-xl border border-primary/30"
+                    >
                       <div className="flex items-start gap-3">
                         <MapPin className="w-5 h-5 text-primary mt-1" />
                         <div className="flex-1">
@@ -540,8 +647,13 @@ export default function OrderPage() {
                         </div>
                         <Check className="w-5 h-5 text-primary" />
                       </div>
-                    </div>
-                    <div className="p-4 bg-muted rounded-xl hover:bg-muted/70 cursor-pointer transition-colors">
+                    </motion.div>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="p-4 bg-muted rounded-xl hover:bg-muted/70 cursor-pointer transition-colors"
+                    >
                       <div className="flex items-start gap-3">
                         <MapPin className="w-5 h-5 text-muted-foreground mt-1" />
                         <div>
@@ -551,7 +663,7 @@ export default function OrderPage() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                     <Button variant="outline" className="w-full border-dashed border-primary text-primary hover:bg-primary/10 font-medium">
                       <Plus className="w-4 h-4 mr-2" /> Add New Address
                     </Button>
@@ -563,52 +675,54 @@ export default function OrderPage() {
                     {orderStatus !== "idle" ? (
                       <div className="space-y-4">
                         <div className="text-center py-4">
-                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                            <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
-                          </div>
+                          <motion.div 
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                            className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4"
+                          >
+                            <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full" />
+                          </motion.div>
                           <h3 className="text-lg font-bold mb-2 text-foreground">Processing Order</h3>
                         </div>
                         
                         <div className="space-y-3">
-                          <div className={`flex items-center gap-3 p-3 rounded-xl ${orderStatus !== "idle" ? "bg-primary/10" : "bg-muted"}`}>
-                            {orderStatus === "processing" ? (
-                              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                            ) : (
-                              <CheckCircle className="w-5 h-5 text-primary" />
-                            )}
-                            <span className={orderStatus !== "idle" ? "text-primary font-medium" : "text-foreground"}>Placing order...</span>
-                          </div>
-                          
-                          <div className={`flex items-center gap-3 p-3 rounded-xl ${["pharmacy_selected", "confirmed", "preparing"].includes(orderStatus) ? "bg-primary/10" : "bg-muted"}`}>
-                            {orderStatus === "pharmacy_selected" ? (
-                              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                            ) : ["confirmed", "preparing"].includes(orderStatus) ? (
-                              <CheckCircle className="w-5 h-5 text-primary" />
-                            ) : (
-                              <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
-                            )}
-                            <span className={["pharmacy_selected", "confirmed", "preparing"].includes(orderStatus) ? "text-primary font-medium" : "text-muted-foreground"}>
-                              AI selecting nearest pharmacy...
-                            </span>
-                          </div>
-                          
-                          <div className={`flex items-center gap-3 p-3 rounded-xl ${["confirmed", "preparing"].includes(orderStatus) ? "bg-primary/10" : "bg-muted"}`}>
-                            {orderStatus === "confirmed" ? (
-                              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                            ) : orderStatus === "preparing" ? (
-                              <CheckCircle className="w-5 h-5 text-primary" />
-                            ) : (
-                              <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
-                            )}
-                            <span className={["confirmed", "preparing"].includes(orderStatus) ? "text-primary font-medium" : "text-muted-foreground"}>
-                              Confirming with pharmacy...
-                            </span>
-                          </div>
+                          {[
+                            { status: "processing", label: "Placing order..." },
+                            { status: "pharmacy_selected", label: "AI selecting nearest pharmacy..." },
+                            { status: "confirmed", label: "Confirming with pharmacy..." },
+                          ].map((step, i) => {
+                            const isActive = orderStatus === step.status;
+                            const isComplete = ["pharmacy_selected", "confirmed", "preparing"].includes(orderStatus) && 
+                              (step.status === "processing" || (step.status === "pharmacy_selected" && ["confirmed", "preparing"].includes(orderStatus)));
+                            
+                            return (
+                              <motion.div 
+                                key={step.status}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.2 }}
+                                className={`flex items-center gap-3 p-3 rounded-xl ${isActive || isComplete ? "bg-primary/10" : "bg-muted"}`}
+                              >
+                                {isActive ? (
+                                  <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                ) : isComplete ? (
+                                  <CheckCircle className="w-5 h-5 text-primary" />
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
+                                )}
+                                <span className={isActive || isComplete ? "text-primary font-medium" : "text-muted-foreground"}>
+                                  {step.label}
+                                </span>
+                              </motion.div>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : (
                       <>
-                        <div 
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
                           onClick={() => setPaymentMethod("online")}
                           className={`p-4 rounded-xl cursor-pointer transition-all ${
                             paymentMethod === "online" 
@@ -624,8 +738,11 @@ export default function OrderPage() {
                             </div>
                             {paymentMethod === "online" && <CheckCircle className="w-5 h-5 text-primary" />}
                           </div>
-                        </div>
-                        <div 
+                        </motion.div>
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
                           onClick={() => setPaymentMethod("cod")}
                           className={`p-4 rounded-xl cursor-pointer transition-all ${
                             paymentMethod === "cod" 
@@ -641,7 +758,7 @@ export default function OrderPage() {
                             </div>
                             {paymentMethod === "cod" && <CheckCircle className="w-5 h-5 text-primary" />}
                           </div>
-                        </div>
+                        </motion.div>
                       </>
                     )}
                   </div>
@@ -655,14 +772,27 @@ export default function OrderPage() {
                       transition={{ type: "spring", damping: 15 }}
                       className="text-center py-4"
                     >
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 glow-primary">
-                        <Package className="w-10 h-10 text-white" />
+                      <div className="relative">
+                        <motion.div
+                          initial={{ scale: 0, opacity: 1 }}
+                          animate={{ scale: 2, opacity: 0 }}
+                          transition={{ duration: 0.6 }}
+                          className="absolute inset-0 w-20 h-20 rounded-full bg-primary mx-auto"
+                        />
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 glow-primary relative">
+                          <Package className="w-10 h-10 text-white" />
+                        </div>
                       </div>
                       <h3 className="text-2xl font-bold mb-1 text-foreground">Order Confirmed!</h3>
                       <p className="text-muted-foreground">Order #{orderId}</p>
                     </motion.div>
                     
-                    <div className="glass-card rounded-2xl p-4 bg-muted/50">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="glass-card rounded-2xl p-4"
+                    >
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
                           <Truck className="w-6 h-6 text-primary" />
@@ -693,7 +823,7 @@ export default function OrderPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
 
                     <Link href={`/track?orderId=${orderId}`}>
                       <Button className="w-full btn-primary-gradient font-bold py-6">
@@ -705,19 +835,25 @@ export default function OrderPage() {
               </ScrollArea>
 
               {checkoutStep < 3 && cart.length > 0 && orderStatus === "idle" && (
-                <div className="p-6 border-t border-border bg-white">
+                <div className="p-6 border-t border-border bg-card">
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="text-foreground">₹{cartTotal}</span>
                     </div>
+                    {promoApplied && (
+                      <div className="flex justify-between text-sm text-green-500">
+                        <span>Discount (10%)</span>
+                        <span>-₹{discount}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Delivery Fee</span>
                       <span className="text-foreground">₹{selectedPharmacy?.deliveryFee || 25}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
                       <span className="text-foreground">Total</span>
-                      <span className="text-primary">₹{cartTotal + (selectedPharmacy?.deliveryFee || 25)}</span>
+                      <span className="text-primary">₹{finalTotal}</span>
                     </div>
                   </div>
                   <Button 
@@ -726,7 +862,7 @@ export default function OrderPage() {
                   >
                     {checkoutStep === 0 && "Proceed to Checkout"}
                     {checkoutStep === 1 && "Continue to Payment"}
-                    {checkoutStep === 2 && "Place Order"}
+                    {checkoutStep === 2 && `Place Order • ₹${finalTotal}`}
                     <ChevronRight className="w-5 h-5 ml-2" />
                   </Button>
                 </div>

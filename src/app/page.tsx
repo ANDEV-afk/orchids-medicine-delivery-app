@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { 
-  Pill, Truck, Clock, Shield, Store, ChevronRight, Search, MapPin, 
-  Star, Zap, Brain, BadgeCheck, TrendingUp, Package, Plus, ShoppingCart
+  Truck, Clock, Shield, Store, ChevronRight, Search, MapPin, 
+  Star, Zap, Brain, BadgeCheck, TrendingUp, Package, Plus, Heart,
+  Sparkles, Rocket, Users, Award
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { DoseuppLogo } from "@/components/DoseuppLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getPharmaciesWithDistances, type Pharmacy, subscribeToPharmacies } from "@/lib/pharmacy-store";
 import { getFeaturedMedicines, type Medicine } from "@/lib/medicines-store";
 
@@ -27,12 +30,58 @@ const features = [
   { icon: TrendingUp, title: "Best Prices", desc: "Compare prices and save up to 40% on medicines" },
 ];
 
+const trustedBy = [
+  "Apollo Pharmacy", "MedPlus", "Fortis", "Max Healthcare", "Wellness Forever",
+  "NetMeds", "PharmEasy", "1mg", "Guardian", "LifeCare"
+];
+
 const userLocation = { lat: 28.6139, lng: 77.2090 };
+
+function MarqueeSection() {
+  return (
+    <div className="py-8 border-y border-border bg-card/50">
+      <div className="marquee-container">
+        <div className="marquee-content">
+          {[...trustedBy, ...trustedBy].map((brand, i) => (
+            <div key={i} className="flex items-center gap-8 mx-8">
+              <span className="text-muted-foreground font-medium whitespace-nowrap">{brand}</span>
+              <Sparkles className="w-4 h-4 text-primary/40" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnimatedSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 60 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [featuredMedicines, setFeaturedMedicines] = useState<Medicine[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
 
   useEffect(() => {
     const loadPharmacies = () => {
@@ -49,11 +98,8 @@ export default function Home() {
     <div className="min-h-screen bg-background mesh-gradient">
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold gradient-text">MedRush</span>
+          <Link href="/">
+            <DoseuppLogo size="md" />
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
@@ -63,6 +109,7 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link href="/pharmacy/onboarding">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white hidden sm:flex font-medium">
                 <Store className="w-4 h-4 mr-2" />
@@ -78,7 +125,11 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="pt-32 pb-20 px-6">
+      <motion.section 
+        ref={heroRef}
+        style={{ opacity: heroOpacity, scale: heroScale }}
+        className="pt-32 pb-20 px-6"
+      >
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -92,18 +143,18 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-8"
             >
-              <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary font-medium">AI-Powered Smart Inventory System</span>
+              <Rocket className="w-4 h-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Ultrafast Medicine Delivery in Delhi NCR</span>
             </motion.div>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight text-foreground">
-              Medicine Delivery{" "}
-              <span className="gradient-text">Reimagined</span>
+              Your Health,{" "}
+              <span className="gradient-text">Delivered Fast</span>
             </h1>
             
             <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-              Our AI finds the nearest pharmacy with your medicines in stock. 
-              Order, track, and receive in under 15 minutes.
+              AI-powered medicine delivery in under 12 minutes. 
+              From prescription to doorstep, we&apos;ve got you covered.
             </p>
 
             <motion.div 
@@ -116,7 +167,7 @@ export default function Home() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input 
                   placeholder="Search medicines, vitamins, health products..." 
-                  className="pl-12 pr-4 py-6 text-lg bg-white border-border rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+                  className="pl-12 pr-4 py-6 text-lg bg-card border-border rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -141,6 +192,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + i * 0.1 }}
+                whileHover={{ scale: 1.02, y: -4 }}
                 className="glass-card rounded-2xl p-6 text-center card-hover"
               >
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-3">
@@ -152,16 +204,13 @@ export default function Home() {
             ))}
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="py-20 px-6 bg-gradient-to-b from-transparent to-secondary/30">
+      <MarqueeSection />
+
+      <AnimatedSection className="py-20 px-6 bg-gradient-to-b from-transparent to-secondary/30">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="flex items-center justify-between mb-10"
-          >
+          <div className="flex items-center justify-between mb-10">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">Featured Medicines</h2>
               <p className="text-muted-foreground">
@@ -173,7 +222,7 @@ export default function Home() {
                 View All <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {featuredMedicines.map((medicine, i) => {
@@ -185,9 +234,10 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
-                  className="medicine-card rounded-2xl overflow-hidden group card-hover bg-white"
+                  whileHover={{ scale: 1.02, y: -4 }}
+                  className="medicine-card rounded-2xl overflow-hidden group"
                 >
-                  <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-white overflow-hidden">
+                  <div className="relative h-32 bg-gradient-to-br from-secondary/50 to-card overflow-hidden">
                     <img 
                       src={medicine.image} 
                       alt={medicine.name}
@@ -198,6 +248,13 @@ export default function Home() {
                         {discount}% OFF
                       </Badge>
                     )}
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 dark:bg-card/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Heart className="w-4 h-4 text-primary" />
+                    </motion.button>
                   </div>
                   <div className="p-4">
                     <p className="text-xs text-muted-foreground mb-1">{medicine.brand}</p>
@@ -220,21 +277,16 @@ export default function Home() {
             })}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      <section className="py-20 px-6">
+      <AnimatedSection className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">Why Choose <span className="gradient-text">MedRush</span>?</h2>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">Why Choose <span className="gradient-text">Doseupp</span>?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               The most advanced medicine delivery platform powered by AI
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {features.map((feature, i) => (
@@ -244,7 +296,8 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card rounded-2xl p-6 card-hover group bg-white"
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="glass-card rounded-2xl p-6 card-hover group"
               >
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5 group-hover:glow-primary transition-all">
                   <feature.icon className="w-7 h-7 text-primary" />
@@ -255,16 +308,11 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      <section className="py-20 px-6 bg-gradient-to-b from-transparent to-secondary/30">
+      <AnimatedSection className="py-20 px-6 bg-gradient-to-b from-transparent to-secondary/30">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="flex items-center justify-between mb-10"
-          >
+          <div className="flex items-center justify-between mb-10">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">Partner Pharmacies</h2>
               <p className="text-muted-foreground">
@@ -276,7 +324,7 @@ export default function Home() {
                 View All <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {pharmacies.map((pharmacy, i) => (
@@ -286,7 +334,8 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card rounded-2xl overflow-hidden card-hover group cursor-pointer bg-white"
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="glass-card rounded-2xl overflow-hidden card-hover group cursor-pointer"
               >
                 <div className="h-36 overflow-hidden relative">
                   <img 
@@ -294,7 +343,7 @@ export default function Home() {
                     alt={pharmacy.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent" />
                   {!pharmacy.isVerified && (
                     <span className="absolute top-3 right-3 new-badge text-xs px-2.5 py-1 rounded-full text-white font-medium">
                       NEW
@@ -336,15 +385,13 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      <section className="py-20 px-6">
+      <AnimatedSection className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="glass-card rounded-3xl p-10 md:p-16 relative overflow-hidden bg-white"
+            whileHover={{ scale: 1.01 }}
+            className="glass-card rounded-3xl p-10 md:p-16 relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -374,30 +421,29 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-              <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary float-animation">
+              <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className="w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary"
+              >
                 <Store className="w-16 h-16 md:w-24 md:h-24 text-white" />
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      <footer className="py-12 px-6 border-t border-border bg-white">
+      <footer className="py-12 px-6 border-t border-border bg-card">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Pill className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold gradient-text">MedRush</span>
-            </div>
+            <DoseuppLogo size="md" />
             <div className="flex items-center gap-8 text-muted-foreground">
               <Link href="/order" className="hover:text-primary transition-colors font-medium">Order</Link>
               <Link href="/track" className="hover:text-primary transition-colors font-medium">Track</Link>
               <Link href="/pharmacy/onboarding" className="hover:text-primary transition-colors font-medium">Partner</Link>
               <Link href="/pharmacy/dashboard" className="hover:text-primary transition-colors font-medium">Dashboard</Link>
             </div>
-            <p className="text-muted-foreground text-sm">© 2024 MedRush. All rights reserved.</p>
+            <p className="text-muted-foreground text-sm">© 2024 Doseupp. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
-  Pill, Package, Clock, CheckCircle2, XCircle, TrendingUp, 
+  Package, Clock, CheckCircle2, XCircle, TrendingUp, 
   DollarSign, ShoppingBag, Users, Settings, Bell, Search,
   ChevronRight, Eye, X, Truck, MapPin, Phone
 } from "lucide-react";
@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DoseuppLogo } from "@/components/DoseuppLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const stats = [
   { label: "Today's Orders", value: "24", change: "+12%", icon: ShoppingBag, color: "primary" },
@@ -108,14 +110,12 @@ export default function PharmacyDashboard() {
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold gradient-text">MedRush</span>
+            <DoseuppLogo size="md" />
             <Badge variant="outline" className="ml-2 border-primary text-primary">Pharmacy</Badge>
           </Link>
           
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" className="relative text-foreground hover:bg-muted">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full text-[10px] flex items-center justify-center text-white">3</span>

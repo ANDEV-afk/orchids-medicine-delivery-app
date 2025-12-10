@@ -3,16 +3,18 @@
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Pill, MapPin, Phone, Clock, Package, Truck, Store, 
+  MapPin, Phone, Clock, Package, Truck, Store, 
   CheckCircle2, ChevronRight, User, MessageSquare,
-  Brain, Sparkles
+  Brain, Sparkles, Shield, Fingerprint, PartyPopper, X, Star
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { DoseuppLogo } from "@/components/DoseuppLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const orderDetails = {
-  orderId: "MR12345678",
+  orderId: "DU12345678",
   placedAt: "2:30 PM",
   estimatedDelivery: "2:42 PM",
   items: [
@@ -35,6 +37,7 @@ const orderDetails = {
     rating: 4.9,
     deliveries: 1250,
     vehicle: "Honda Activa",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
   },
 };
 
@@ -43,20 +46,31 @@ const trackingSteps = [
   { id: 2, title: "AI Pharmacy Selection", description: "Finding nearest pharmacy with stock", icon: Brain, time: "2:31 PM" },
   { id: 3, title: "Order Confirmed", description: "Pharmacy has confirmed your order", icon: CheckCircle2, time: "2:32 PM" },
   { id: 4, title: "Preparing Order", description: "Pharmacy is preparing your medicines", icon: Store, time: "2:35 PM" },
-  { id: 5, title: "Out for Delivery", description: "Rider is on the way", icon: Truck, time: "2:38 PM" },
-  { id: 6, title: "Delivered", description: "Order has been delivered", icon: CheckCircle2, time: "" },
+  { id: 5, title: "Rider Assigned", description: "Rider is on the way to pharmacy", icon: User, time: "2:36 PM" },
+  { id: 6, title: "Out for Delivery", description: "Rider has picked up your order", icon: Truck, time: "2:38 PM" },
+  { id: 7, title: "Doorstep Verification", description: "Verify OTP to receive order", icon: Fingerprint, time: "2:41 PM" },
+  { id: 8, title: "Delivered", description: "Order delivered successfully", icon: PartyPopper, time: "2:42 PM" },
 ];
 
 function TrackContent() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [progress, setProgress] = useState(0);
-  const [riderLocation, setRiderLocation] = useState({ x: 20, y: 80 });
+  const [riderLocation, setRiderLocation] = useState({ x: 15, y: 85 });
+  const [showVerificationPopup, setShowVerificationPopup] = useState(false);
+  const [showDeliveredPopup, setShowDeliveredPopup] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [verifying, setVerifying] = useState(false);
+  const correctOTP = "1234";
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStep(prev => {
-        if (prev < 5) return prev + 1;
+        if (prev < 6) return prev + 1;
+        if (prev === 6) {
+          setTimeout(() => setShowVerificationPopup(true), 1000);
+          clearInterval(interval);
+        }
         return prev;
       });
     }, 2500);
@@ -65,19 +79,46 @@ function TrackContent() {
   }, []);
 
   useEffect(() => {
-    const progressMap: Record<number, number> = { 1: 5, 2: 20, 3: 40, 4: 60, 5: 85, 6: 100 };
+    const progressMap: Record<number, number> = { 1: 5, 2: 15, 3: 28, 4: 42, 5: 55, 6: 70, 7: 88, 8: 100 };
     setProgress(progressMap[currentStep] || 0);
 
-    if (currentStep >= 5) {
+    if (currentStep >= 6 && currentStep < 8) {
       const riderInterval = setInterval(() => {
         setRiderLocation(prev => ({
-          x: Math.min(prev.x + 2, 80),
-          y: Math.max(prev.y - 1.5, 30),
+          x: Math.min(prev.x + 1.5, 85),
+          y: Math.max(prev.y - 1, 25),
         }));
-      }, 200);
+      }, 150);
       return () => clearInterval(riderInterval);
     }
   }, [currentStep]);
+
+  const handleOTPChange = (index: number, value: string) => {
+    if (value.length > 1) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    setVerifying(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (otp.join("") === correctOTP) {
+      setShowVerificationPopup(false);
+      setCurrentStep(7);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setCurrentStep(8);
+      setShowDeliveredPopup(true);
+    }
+    setVerifying(false);
+  };
 
   const subtotal = orderDetails.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + orderDetails.delivery.fee;
@@ -87,17 +128,17 @@ function TrackContent() {
     <div className="min-h-screen bg-background mesh-gradient">
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Pill className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold gradient-text">MedRush</span>
+          <Link href="/">
+            <DoseuppLogo size="md" />
           </Link>
-          <Link href="/order">
-            <Button className="btn-primary-gradient font-semibold">
-              Order More
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/order">
+              <Button className="btn-primary-gradient font-semibold">
+                Order More
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -123,13 +164,13 @@ function TrackContent() {
               transition={{ delay: 0.1 }}
               className="lg:col-span-3 space-y-6"
             >
-              <div className="glass-card rounded-3xl overflow-hidden bg-white">
-                <div className="h-56 bg-gradient-to-br from-secondary/50 to-white relative overflow-hidden">
+              <div className="glass-card rounded-3xl overflow-hidden">
+                <div className="h-56 bg-gradient-to-br from-secondary/50 to-card relative overflow-hidden">
                   <div className="absolute inset-0 opacity-30">
                     <div className="absolute inset-0" style={{
                       backgroundImage: `
-                        linear-gradient(rgba(5, 150, 105, 0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(5, 150, 105, 0.1) 1px, transparent 1px)
+                        linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px)
                       `,
                       backgroundSize: '30px 30px'
                     }} />
@@ -137,10 +178,10 @@ function TrackContent() {
                   
                   <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <motion.path
-                      d="M 15 85 Q 30 70, 45 65 T 75 40 T 85 25"
+                      d="M 10 90 Q 25 75, 40 70 T 65 50 T 90 20"
                       stroke="url(#routeGradient)"
-                      strokeWidth="0.5"
-                      strokeDasharray="2,2"
+                      strokeWidth="0.8"
+                      strokeDasharray="3,2"
                       fill="none"
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
@@ -148,8 +189,8 @@ function TrackContent() {
                     />
                     <defs>
                       <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#0ea5e9" />
-                        <stop offset="100%" stopColor="#059669" />
+                        <stop offset="0%" stopColor="#60a5fa" />
+                        <stop offset="100%" stopColor="#2563eb" />
                       </linearGradient>
                     </defs>
                   </svg>
@@ -179,7 +220,7 @@ function TrackContent() {
                   </motion.div>
 
                   <AnimatePresence>
-                    {currentStep >= 5 && (
+                    {currentStep >= 6 && (
                       <motion.div
                         className="absolute"
                         style={{ 
@@ -258,15 +299,19 @@ function TrackContent() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="glass-card rounded-2xl p-5 bg-white"
+                  className="glass-card rounded-2xl p-5"
                 >
                   <h3 className="font-bold mb-4 flex items-center gap-2 text-foreground">
                     <Truck className="w-5 h-5 text-primary" />
                     Delivery Partner
                   </h3>
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <User className="w-7 h-7 text-primary" />
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+                      <img 
+                        src={orderDetails.rider.image} 
+                        alt={orderDetails.rider.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1">
                       <p className="font-bold text-foreground">{orderDetails.rider.name}</p>
@@ -284,6 +329,25 @@ function TrackContent() {
                       </Button>
                     </div>
                   </div>
+
+                  {currentStep === 6 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                          <Fingerprint className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">Verification OTP</p>
+                          <p className="text-2xl font-bold text-primary tracking-widest">1234</p>
+                          <p className="text-xs text-muted-foreground">Share this OTP with rider at delivery</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </motion.div>
@@ -294,7 +358,7 @@ function TrackContent() {
               transition={{ delay: 0.2 }}
               className="lg:col-span-2 space-y-6"
             >
-              <div className="glass-card rounded-2xl p-5 bg-white">
+              <div className="glass-card rounded-2xl p-5">
                 <h3 className="font-bold mb-4 text-foreground">Order Progress</h3>
                 <div className="space-y-1">
                   {trackingSteps.map((step, i) => {
@@ -316,19 +380,21 @@ function TrackContent() {
                             animate={{ scale: isCompleted || isCurrent ? 1 : 0.8 }}
                             className={`w-10 h-10 rounded-xl flex items-center justify-center z-10 ${
                               isCompleted || isCurrent
-                                ? "bg-gradient-to-br from-primary to-accent"
+                                ? step.id === 8 && isCompleted 
+                                  ? "bg-gradient-to-br from-green-500 to-emerald-500"
+                                  : "bg-gradient-to-br from-primary to-accent"
                                 : "bg-muted border border-border"
                             }`}
                           >
                             <Icon className={`w-5 h-5 ${isCompleted || isCurrent ? "text-white" : "text-muted-foreground"}`} />
                           </motion.div>
                           {i < trackingSteps.length - 1 && (
-                            <div className={`w-0.5 h-8 ${isCompleted ? "bg-primary" : "bg-border"}`} />
+                            <div className={`w-0.5 h-6 ${isCompleted ? "bg-primary" : "bg-border"}`} />
                           )}
                         </div>
-                        <div className="flex-1 pt-2 pb-3">
+                        <div className="flex-1 pt-2 pb-2">
                           <div className="flex items-center justify-between">
-                            <p className={`font-medium text-sm ${isCurrent ? "text-primary" : "text-foreground"}`}>{step.title}</p>
+                            <p className={`font-medium text-sm ${isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>{step.title}</p>
                             {(isCompleted || isCurrent) && step.time && (
                               <span className="text-xs text-muted-foreground">{step.time}</span>
                             )}
@@ -347,7 +413,7 @@ function TrackContent() {
                 </div>
               </div>
 
-              <div className="glass-card rounded-2xl p-5 bg-white">
+              <div className="glass-card rounded-2xl p-5">
                 <h3 className="font-bold mb-4 text-foreground">Order Summary</h3>
                 <div className="space-y-3 mb-4">
                   {orderDetails.items.map((item, i) => (
@@ -385,6 +451,161 @@ function TrackContent() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showVerificationPopup && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="glass-card rounded-3xl p-8 max-w-md w-full text-center"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-6 glow-primary"
+                >
+                  <Fingerprint className="w-10 h-10 text-white" />
+                </motion.div>
+                
+                <h2 className="text-2xl font-bold mb-2 text-foreground">Doorstep Verification</h2>
+                <p className="text-muted-foreground mb-6">
+                  Rider is at your doorstep! Enter the OTP shared by the rider to receive your order.
+                </p>
+
+                <div className="flex justify-center gap-3 mb-6">
+                  {otp.map((digit, i) => (
+                    <input
+                      key={i}
+                      id={`otp-${i}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOTPChange(i, e.target.value)}
+                      className="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-border bg-card text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  ))}
+                </div>
+
+                <Button
+                  onClick={handleVerifyOTP}
+                  disabled={otp.join("").length < 4 || verifying}
+                  className="w-full btn-primary-gradient font-bold py-6"
+                >
+                  {verifying ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-5 h-5 mr-2" />
+                      Verify & Receive Order
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-xs text-muted-foreground mt-4">
+                  OTP ensures your order is delivered to the right person
+                </p>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDeliveredPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="glass-card rounded-3xl p-8 max-w-md w-full text-center relative overflow-hidden"
+            >
+              <button
+                onClick={() => setShowDeliveredPopup(false)}
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", damping: 10, delay: 0.2 }}
+                className="relative"
+              >
+                <motion.div
+                  initial={{ scale: 0, opacity: 1 }}
+                  animate={{ scale: 3, opacity: 0 }}
+                  transition={{ duration: 1, repeat: 2 }}
+                  className="absolute inset-0 w-24 h-24 rounded-full bg-green-500 mx-auto"
+                />
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 relative">
+                  <PartyPopper className="w-12 h-12 text-white" />
+                </div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h2 className="text-3xl font-bold mb-2 text-foreground">Order Delivered!</h2>
+                <p className="text-muted-foreground mb-6">
+                  Your medicines have been delivered successfully. Thank you for choosing Doseupp!
+                </p>
+
+                <div className="glass-card rounded-xl p-4 mb-6">
+                  <p className="text-sm text-muted-foreground mb-2">Rate your delivery experience</p>
+                  <div className="flex justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <motion.button
+                        key={star}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="text-primary"
+                      >
+                        <Star className="w-8 h-8 fill-primary" />
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowDeliveredPopup(false)}
+                    variant="outline"
+                    className="flex-1 border-primary text-primary hover:bg-primary hover:text-white py-5 font-medium"
+                  >
+                    Close
+                  </Button>
+                  <Link href="/order" className="flex-1">
+                    <Button className="w-full btn-primary-gradient font-bold py-5">
+                      Order Again
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
