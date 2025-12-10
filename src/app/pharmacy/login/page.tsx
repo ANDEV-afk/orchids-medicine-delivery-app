@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Store, ChevronRight, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Store, ChevronRight, User, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DoseuppLogo } from "@/components/DoseuppLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { authenticatePharmacy } from "@/lib/pharmacy-store";
 
 export default function PharmacyLogin() {
   const router = useRouter();
@@ -17,18 +18,29 @@ export default function PharmacyLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginType, setLoginType] = useState<"pharmacy" | "user">("pharmacy");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    localStorage.setItem("doseupp_user_type", loginType);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     if (loginType === "pharmacy") {
-      router.push("/pharmacy/dashboard");
+      const pharmacy = authenticatePharmacy(email, password);
+      if (pharmacy) {
+        localStorage.setItem("doseupp_user_type", "pharmacy");
+        localStorage.setItem("doseupp_pharmacy_id", pharmacy.id);
+        localStorage.setItem("doseupp_pharmacy_name", pharmacy.name);
+        router.push("/pharmacy/dashboard");
+      } else {
+        setError("Invalid email or password. Try: apollo@doseupp.com / apollo123");
+        setIsLoading(false);
+      }
     } else {
+      localStorage.setItem("doseupp_user_type", "user");
+      localStorage.removeItem("doseupp_pharmacy_id");
       router.push("/order");
     }
   };
@@ -71,7 +83,7 @@ export default function PharmacyLogin() {
 
           <div className="flex gap-2 mb-6 p-1 bg-muted rounded-xl">
             <button
-              onClick={() => setLoginType("pharmacy")}
+              onClick={() => { setLoginType("pharmacy"); setError(""); }}
               className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                 loginType === "pharmacy" 
                   ? "bg-card text-foreground shadow-sm" 
@@ -82,7 +94,7 @@ export default function PharmacyLogin() {
               Pharmacy
             </button>
             <button
-              onClick={() => setLoginType("user")}
+              onClick={() => { setLoginType("user"); setError(""); }}
               className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                 loginType === "user" 
                   ? "bg-card text-foreground shadow-sm" 
@@ -94,6 +106,25 @@ export default function PharmacyLogin() {
             </button>
           </div>
 
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/30 flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 text-destructive" />
+              <p className="text-sm text-destructive">{error}</p>
+            </motion.div>
+          )}
+
+          {loginType === "pharmacy" && (
+            <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/30">
+              <p className="text-xs text-primary font-medium mb-1">Demo Credentials:</p>
+              <p className="text-xs text-muted-foreground">Email: apollo@doseupp.com</p>
+              <p className="text-xs text-muted-foreground">Password: apollo123</p>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Email</label>
@@ -101,7 +132,7 @@ export default function PharmacyLogin() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder={loginType === "pharmacy" ? "pharmacy@example.com" : "user@example.com"}
+                  placeholder={loginType === "pharmacy" ? "pharmacy@doseupp.com" : "user@example.com"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-muted border-border text-foreground"

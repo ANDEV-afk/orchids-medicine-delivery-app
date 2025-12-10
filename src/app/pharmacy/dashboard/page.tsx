@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Package, Clock, CheckCircle2, XCircle, TrendingUp, 
+  Package, Clock, CheckCircle2, XCircle, 
   DollarSign, ShoppingBag, Users, Settings, Bell, Search,
-  ChevronRight, Eye, X, Truck, MapPin, Phone, Bike,
-  Navigation, Star, MessageSquare, LogOut, User
+  ChevronRight, X, Truck, MapPin, Phone, Bike,
+  Navigation, Star, LogOut, User, Plus, AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,91 +17,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DoseuppLogo } from "@/components/DoseuppLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-const stats = [
-  { label: "Today's Orders", value: "24", change: "+12%", icon: ShoppingBag, color: "primary" },
-  { label: "Revenue", value: "₹15,840", change: "+8%", icon: DollarSign, color: "accent" },
-  { label: "Pending Orders", value: "5", change: "-2", icon: Clock, color: "chart-4" },
-  { label: "Customers", value: "156", change: "+23", icon: Users, color: "chart-2" },
-];
-
-const initialOrders = [
-  { 
-    id: "DU12345", 
-    customer: "Rahul Sharma", 
-    items: ["Paracetamol 500mg x2", "Vitamin D3 x1"],
-    total: 135,
-    status: "pending",
-    time: "2 min ago",
-    address: "123, Sector 22, Gurgaon",
-    phone: "+91 9876543210",
-    riderId: null
-  },
-  { 
-    id: "DU12344", 
-    customer: "Priya Singh", 
-    items: ["Azithromycin 500mg x1"],
-    total: 120,
-    status: "preparing",
-    time: "8 min ago",
-    address: "456, DLF Phase 2, Gurgaon",
-    phone: "+91 9876543211",
-    riderId: null
-  },
-  { 
-    id: "DU12343", 
-    customer: "Amit Kumar", 
-    items: ["Metformin 500mg x2", "Aspirin 75mg x1"],
-    total: 120,
-    status: "ready",
-    time: "15 min ago",
-    address: "789, Sector 14, Gurgaon",
-    phone: "+91 9876543212",
-    riderId: "R001"
-  },
-  { 
-    id: "DU12342", 
-    customer: "Neha Gupta", 
-    items: ["Multivitamin x1", "Cetirizine x2"],
-    total: 215,
-    status: "dispatched",
-    time: "25 min ago",
-    address: "321, Cyber City, Gurgaon",
-    phone: "+91 9876543213",
-    riderId: "R002"
-  },
-  { 
-    id: "DU12341", 
-    customer: "Vikram Patel", 
-    items: ["Omeprazole 20mg x1"],
-    total: 55,
-    status: "delivered",
-    time: "45 min ago",
-    address: "654, Sector 56, Gurgaon",
-    phone: "+91 9876543214",
-    riderId: "R001"
-  },
-];
+import { getPharmacyById, type Pharmacy, updatePharmacyInventory } from "@/lib/pharmacy-store";
+import { medicines } from "@/lib/medicines-store";
 
 const riders = [
   { id: "R001", name: "Rajesh Kumar", phone: "+91 9876543220", status: "available", rating: 4.8, trips: 234, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" },
   { id: "R002", name: "Sunil Verma", phone: "+91 9876543221", status: "on_delivery", rating: 4.6, trips: 189, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" },
   { id: "R003", name: "Amit Singh", phone: "+91 9876543222", status: "available", rating: 4.9, trips: 312, image: "https://images.unsplash.com/photo-1599566150163-29194dcabd36?w=100&h=100&fit=crop" },
-];
-
-const initialNotifications = [
-  { id: 1, type: "order", message: "New order #DU12345 received", time: "2 min ago", read: false },
-  { id: 2, type: "rider", message: "Rajesh Kumar is now available", time: "5 min ago", read: false },
-  { id: 3, type: "stock", message: "Azithromycin stock running low", time: "10 min ago", read: false },
-  { id: 4, type: "delivery", message: "Order #DU12341 delivered successfully", time: "45 min ago", read: true },
-];
-
-const inventory = [
-  { name: "Paracetamol 500mg", brand: "Crocin", stock: 120, lowStock: false },
-  { name: "Azithromycin 500mg", brand: "Azithral", stock: 8, lowStock: true },
-  { name: "Vitamin D3 60000IU", brand: "Drise", stock: 45, lowStock: false },
-  { name: "Cetirizine 10mg", brand: "Cetcip", stock: 5, lowStock: true },
-  { name: "Metformin 500mg", brand: "Glycomet", stock: 89, lowStock: false },
 ];
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -113,26 +35,75 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive", icon: XCircle },
 };
 
-type Order = typeof initialOrders[0];
+type Order = {
+  id: string;
+  customer: string;
+  items: string[];
+  total: number;
+  status: string;
+  time: string;
+  address: string;
+  phone: string;
+  riderId: string | null;
+};
+
+function generateOrdersForPharmacy(pharmacyName: string): Order[] {
+  const baseOrders = [
+    { customer: "Rahul Sharma", items: ["Paracetamol 500mg x2", "Vitamin D3 x1"], total: 135, status: "pending", time: "2 min ago", address: "123, Sector 22, Gurgaon", phone: "+91 9876543210" },
+    { customer: "Priya Singh", items: ["Azithromycin 500mg x1"], total: 120, status: "preparing", time: "8 min ago", address: "456, DLF Phase 2, Gurgaon", phone: "+91 9876543211" },
+    { customer: "Amit Kumar", items: ["Metformin 500mg x2", "Aspirin 75mg x1"], total: 120, status: "ready", time: "15 min ago", address: "789, Sector 14, Gurgaon", phone: "+91 9876543212" },
+    { customer: "Neha Gupta", items: ["Multivitamin x1", "Cetirizine x2"], total: 215, status: "dispatched", time: "25 min ago", address: "321, Cyber City, Gurgaon", phone: "+91 9876543213" },
+    { customer: "Vikram Patel", items: ["Omeprazole 20mg x1"], total: 55, status: "delivered", time: "45 min ago", address: "654, Sector 56, Gurgaon", phone: "+91 9876543214" },
+  ];
+  
+  const hash = pharmacyName.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+  const orderCount = 3 + Math.abs(hash % 4);
+  
+  return baseOrders.slice(0, orderCount).map((order, i) => ({
+    ...order,
+    id: `DU${Math.abs(hash) + i}`,
+    riderId: order.status === "dispatched" || order.status === "ready" ? "R001" : null
+  }));
+}
 
 export default function PharmacyDashboard() {
   const router = useRouter();
-  const [orders, setOrders] = useState(initialOrders);
+  const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<Array<{ id: number; type: string; message: string; time: string; read: boolean }>>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRiderSelect, setShowRiderSelect] = useState(false);
   const [selectedRider, setSelectedRider] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
 
   useEffect(() => {
     const userType = localStorage.getItem("doseupp_user_type");
-    if (userType === "user") {
+    const pharmacyId = localStorage.getItem("doseupp_pharmacy_id");
+    
+    if (userType !== "pharmacy" || !pharmacyId) {
       setIsAuthenticated(false);
-    } else {
-      localStorage.setItem("doseupp_user_type", "pharmacy");
+      setIsLoading(false);
+      return;
     }
+    
+    const pharmacyData = getPharmacyById(pharmacyId);
+    if (pharmacyData) {
+      setPharmacy(pharmacyData);
+      setOrders(generateOrdersForPharmacy(pharmacyData.name));
+      setNotifications([
+        { id: 1, type: "order", message: `New order received`, time: "2 min ago", read: false },
+        { id: 2, type: "rider", message: "Rajesh Kumar is now available", time: "5 min ago", read: false },
+        { id: 3, type: "stock", message: "Some items running low on stock", time: "10 min ago", read: false },
+      ]);
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+    setIsLoading(false);
   }, []);
 
   const filteredOrders = activeTab === "all" 
@@ -167,6 +138,8 @@ export default function PharmacyDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("doseupp_user_type");
+    localStorage.removeItem("doseupp_pharmacy_id");
+    localStorage.removeItem("doseupp_pharmacy_name");
     router.push("/");
   };
 
@@ -175,7 +148,29 @@ export default function PharmacyDashboard() {
     return riders.find(r => r.id === riderId);
   };
 
-  if (!isAuthenticated) {
+  const getInventoryItems = () => {
+    if (!pharmacy) return [];
+    return Object.entries(pharmacy.inventory).map(([medId, stock]) => {
+      const medicine = medicines.find(m => m.id === parseInt(medId));
+      return {
+        id: parseInt(medId),
+        name: medicine?.name || "Unknown",
+        brand: medicine?.brand || "Unknown",
+        stock,
+        lowStock: stock < 20
+      };
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background mesh-gradient flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !pharmacy) {
     return (
       <div className="min-h-screen bg-background mesh-gradient flex items-center justify-center p-6">
         <motion.div
@@ -204,6 +199,16 @@ export default function PharmacyDashboard() {
       </div>
     );
   }
+
+  const stats = [
+    { label: "Today's Orders", value: pharmacy.stats?.todayOrders || orders.length, change: "+12%", icon: ShoppingBag },
+    { label: "Revenue", value: `₹${(pharmacy.stats?.revenue || 0).toLocaleString()}`, change: "+8%", icon: DollarSign },
+    { label: "Pending Orders", value: pharmacy.stats?.pendingOrders || orders.filter(o => o.status === "pending").length, change: "-2", icon: Clock },
+    { label: "Customers", value: pharmacy.stats?.customers || 0, change: "+23", icon: Users },
+  ];
+
+  const inventoryItems = getInventoryItems();
+  const lowStockItems = inventoryItems.filter(i => i.lowStock);
 
   return (
     <div className="min-h-screen bg-background mesh-gradient">
@@ -277,7 +282,7 @@ export default function PharmacyDashboard() {
               <LogOut className="w-5 h-5" />
             </Button>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
-              M
+              {pharmacy.name.charAt(0)}
             </div>
           </div>
         </div>
@@ -290,8 +295,18 @@ export default function PharmacyDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold mb-2 text-foreground">Welcome back, MedPlus!</h1>
+            <h1 className="text-3xl font-bold mb-2 text-foreground">Welcome back, {pharmacy.name.split(' - ')[0]}!</h1>
             <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your store today.</p>
+            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                {pharmacy.area}, {pharmacy.city}
+              </span>
+              <span className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                {pharmacy.rating} ({pharmacy.reviews} reviews)
+              </span>
+            </div>
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -345,43 +360,49 @@ export default function PharmacyDashboard() {
 
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
-                      {filteredOrders.map((order) => {
-                        const status = statusConfig[order.status];
-                        const rider = getRiderForOrder(order.riderId);
-                        return (
-                          <motion.div
-                            key={order.id}
-                            layout
-                            onClick={() => setSelectedOrder(order)}
-                            className="p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted transition-colors"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-3">
-                                <span className="font-semibold text-foreground">#{order.id}</span>
-                                <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${status.color}`}>
-                                  <status.icon className="w-3 h-3" />
-                                  {status.label}
-                                </span>
-                              </div>
-                              <span className="text-xs text-muted-foreground">{order.time}</span>
-                            </div>
-                            <p className="font-medium mb-1 text-foreground">{order.customer}</p>
-                            <p className="text-sm text-muted-foreground line-clamp-1">
-                              {order.items.join(", ")}
-                            </p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="font-semibold text-primary">₹{order.total}</span>
-                              {rider && (
-                                <div className="flex items-center gap-2">
-                                  <img src={rider.image} alt={rider.name} className="w-6 h-6 rounded-full" />
-                                  <span className="text-xs text-muted-foreground">{rider.name}</span>
+                      {filteredOrders.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No orders found
+                        </div>
+                      ) : (
+                        filteredOrders.map((order) => {
+                          const status = statusConfig[order.status];
+                          const rider = getRiderForOrder(order.riderId);
+                          return (
+                            <motion.div
+                              key={order.id}
+                              layout
+                              onClick={() => setSelectedOrder(order)}
+                              className="p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted transition-colors"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-semibold text-foreground">#{order.id}</span>
+                                  <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${status.color}`}>
+                                    <status.icon className="w-3 h-3" />
+                                    {status.label}
+                                  </span>
                                 </div>
-                              )}
-                              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                                <span className="text-xs text-muted-foreground">{order.time}</span>
+                              </div>
+                              <p className="font-medium mb-1 text-foreground">{order.customer}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {order.items.join(", ")}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="font-semibold text-primary">₹{order.total}</span>
+                                {rider && (
+                                  <div className="flex items-center gap-2">
+                                    <img src={rider.image} alt={rider.name} className="w-6 h-6 rounded-full" />
+                                    <span className="text-xs text-muted-foreground">{rider.name}</span>
+                                  </div>
+                                )}
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            </motion.div>
+                          );
+                        })
+                      )}
                     </div>
                   </ScrollArea>
                 </Tabs>
@@ -440,23 +461,36 @@ export default function PharmacyDashboard() {
             >
               <div className="glass-card rounded-3xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">Low Stock Alert</h2>
-                  <Badge variant="destructive" className="text-xs">
-                    {inventory.filter(i => i.lowStock).length} items
-                  </Badge>
+                  <h2 className="text-lg font-semibold text-foreground">Inventory</h2>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="border-primary text-primary"
+                    onClick={() => setShowInventoryModal(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Manage
+                  </Button>
                 </div>
+                {lowStockItems.length > 0 && (
+                  <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/30 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                    <span className="text-sm text-destructive">{lowStockItems.length} items low on stock</span>
+                  </div>
+                )}
                 <div className="space-y-3">
-                  {inventory.filter(i => i.lowStock).map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-destructive/10 rounded-xl">
+                  {inventoryItems.slice(0, 5).map((item) => (
+                    <div key={item.id} className={`flex items-center justify-between p-3 rounded-xl ${item.lowStock ? 'bg-destructive/10' : 'bg-muted/50'}`}>
                       <div>
                         <p className="font-medium text-foreground">{item.name}</p>
                         <p className="text-xs text-muted-foreground">{item.brand}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-destructive">{item.stock} left</p>
-                        <Button size="sm" variant="link" className="text-xs text-primary p-0 h-auto">
-                          Reorder
-                        </Button>
+                        <p className={`font-semibold ${item.lowStock ? 'text-destructive' : 'text-foreground'}`}>{item.stock} left</p>
+                        {item.lowStock && (
+                          <Button size="sm" variant="link" className="text-xs text-primary p-0 h-auto">
+                            Reorder
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -468,7 +502,7 @@ export default function PharmacyDashboard() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Avg. Order Value</span>
-                    <span className="font-semibold text-foreground">₹660</span>
+                    <span className="font-semibold text-foreground">₹{Math.round((pharmacy.stats?.revenue || 0) / Math.max(pharmacy.stats?.todayOrders || 1, 1))}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Completion Rate</span>
@@ -480,7 +514,7 @@ export default function PharmacyDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Customer Rating</span>
-                    <span className="font-semibold text-primary">4.8</span>
+                    <span className="font-semibold text-primary">{pharmacy.rating}</span>
                   </div>
                 </div>
               </div>
@@ -664,6 +698,58 @@ export default function PharmacyDashboard() {
                   </Button>
                 )}
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showInventoryModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-50"
+              onClick={() => setShowInventoryModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl glass-card rounded-3xl p-6 z-50 max-h-[80vh] overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-foreground">Manage Inventory</h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowInventoryModal(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <ScrollArea className="h-[60vh]">
+                <div className="space-y-3 pr-4">
+                  {inventoryItems.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
+                      <div>
+                        <p className="font-medium text-foreground">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.brand}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          defaultValue={item.stock}
+                          className="w-20 text-center bg-card border-border"
+                          onChange={(e) => {
+                            if (pharmacy) {
+                              updatePharmacyInventory(pharmacy.id, item.id, parseInt(e.target.value) || 0);
+                            }
+                          }}
+                        />
+                        <span className="text-sm text-muted-foreground">units</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </motion.div>
           </>
         )}
