@@ -7,7 +7,7 @@ import {
   ChevronRight, X, SlidersHorizontal, Truck,
   CreditCard, Banknote, Check, Package, Sparkles, Brain,
   CheckCircle, Navigation, Zap, Shield, BadgeCheck, Trash2,
-  Gift, Percent, Heart, Share2
+  Gift, Percent, Heart, Share2, Home, Building, Edit2
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,21 @@ type CartItem = {
   image: string;
 };
 
+type Address = {
+  id: string;
+  type: "home" | "office" | "other";
+  label: string;
+  address: string;
+  pincode: string;
+  isDefault: boolean;
+};
+
 type OrderStatus = "idle" | "processing" | "pharmacy_selected" | "confirmed" | "preparing" | "out_for_delivery";
+
+const defaultAddresses: Address[] = [
+  { id: "1", type: "home", label: "Home", address: "Connaught Place, New Delhi, New Delhi - 110001", pincode: "110001", isDefault: true },
+  { id: "2", type: "office", label: "Office", address: "Cyber Hub, DLF Phase 2, Gurgaon - 122002", pincode: "122002", isDefault: false },
+];
 
 const userLocation = { lat: 28.6139, lng: 77.2090, address: "Connaught Place, New Delhi" };
 
@@ -48,6 +62,10 @@ export default function OrderPage() {
   const [cartAnimation, setCartAnimation] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>(defaultAddresses);
+  const [selectedAddress, setSelectedAddress] = useState<Address>(defaultAddresses[0]);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({ label: "", address: "", pincode: "", type: "other" as "home" | "office" | "other" });
 
   useEffect(() => {
     const loadPharmacies = () => {
@@ -133,6 +151,27 @@ export default function OrderPage() {
     if (promoCode.toLowerCase() === "health10" || promoCode.toLowerCase() === "first") {
       setPromoApplied(true);
     }
+  };
+
+  const handleAddAddress = () => {
+    if (newAddress.label && newAddress.address && newAddress.pincode) {
+      const addr: Address = {
+        id: Date.now().toString(),
+        type: newAddress.type,
+        label: newAddress.label,
+        address: newAddress.address + " - " + newAddress.pincode,
+        pincode: newAddress.pincode,
+        isDefault: false,
+      };
+      setAddresses(prev => [...prev, addr]);
+      setSelectedAddress(addr);
+      setShowAddAddress(false);
+      setNewAddress({ label: "", address: "", pincode: "", type: "other" });
+    }
+  };
+
+  const handleSelectAddress = (address: Address) => {
+    setSelectedAddress(address);
   };
 
   const handlePlaceOrder = async () => {
@@ -234,7 +273,7 @@ export default function OrderPage() {
           >
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/30">
               <Navigation className="w-4 h-4 text-primary" />
-              <span className="text-sm text-foreground">📍 <span className="font-semibold">{userLocation.address}</span></span>
+              <span className="text-sm text-foreground">📍 <span className="font-semibold">{selectedAddress.label}: {selectedAddress.address.split(',')[0]}</span></span>
             </div>
             <Button 
               variant="outline" 
@@ -376,7 +415,7 @@ export default function OrderPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredMedicines.map((medicine, index) => {
                 const quantity = getItemQuantity(medicine.id);
-                const discount = Math.round((1 - medicine.price / medicine.originalPrice) * 100);
+                const discountPercent = Math.round((1 - medicine.price / medicine.originalPrice) * 100);
                 
                 return (
                   <motion.div
@@ -393,9 +432,9 @@ export default function OrderPage() {
                         alt={medicine.name}
                         className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500"
                       />
-                      {discount > 0 && (
+                      {discountPercent > 0 && (
                         <Badge className="absolute top-2 left-2 bg-accent text-white border-0 font-bold">
-                          {discount}% OFF
+                          {discountPercent}% OFF
                         </Badge>
                       )}
                       {medicine.prescription && (
@@ -472,7 +511,7 @@ export default function OrderPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={() => { setIsCartOpen(false); setCheckoutStep(0); setOrderStatus("idle"); }}
+              onClick={() => { setIsCartOpen(false); setCheckoutStep(0); setOrderStatus("idle"); setShowAddAddress(false); }}
             />
             <motion.div
               initial={{ x: "100%" }}
@@ -496,7 +535,7 @@ export default function OrderPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => { setIsCartOpen(false); setCheckoutStep(0); setOrderStatus("idle"); }}
+                  onClick={() => { setIsCartOpen(false); setCheckoutStep(0); setOrderStatus("idle"); setShowAddAddress(false); }}
                   className="hover:bg-muted text-foreground"
                 >
                   <X className="w-5 h-5" />
@@ -630,44 +669,147 @@ export default function OrderPage() {
                   </>
                 )}
 
-                {checkoutStep === 1 && (
+                {checkoutStep === 1 && !showAddAddress && (
                   <div className="space-y-4">
-                    <motion.div 
+                    <p className="text-sm text-muted-foreground mb-4">Select delivery address</p>
+                    
+                    {addresses.map((addr, index) => (
+                      <motion.div 
+                        key={addr.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        onClick={() => handleSelectAddress(addr)}
+                        className={`p-4 rounded-xl cursor-pointer transition-all ${
+                          selectedAddress.id === addr.id 
+                            ? "bg-primary/10 border-2 border-primary" 
+                            : "bg-muted hover:bg-muted/70 border-2 border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            selectedAddress.id === addr.id ? "bg-primary" : "bg-card border border-border"
+                          }`}>
+                            {addr.type === "home" ? (
+                              <Home className={`w-5 h-5 ${selectedAddress.id === addr.id ? "text-white" : "text-muted-foreground"}`} />
+                            ) : addr.type === "office" ? (
+                              <Building className={`w-5 h-5 ${selectedAddress.id === addr.id ? "text-white" : "text-muted-foreground"}`} />
+                            ) : (
+                              <MapPin className={`w-5 h-5 ${selectedAddress.id === addr.id ? "text-white" : "text-muted-foreground"}`} />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-foreground">{addr.label}</p>
+                            <p className="text-sm text-muted-foreground">{addr.address}</p>
+                          </div>
+                          {selectedAddress.id === addr.id && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="w-6 h-6 rounded-full bg-primary flex items-center justify-center"
+                            >
+                              <Check className="w-4 h-4 text-white" />
+                            </motion.div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                    
+                    <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-primary/10 rounded-xl border border-primary/30"
+                      transition={{ delay: 0.3 }}
                     >
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-primary mt-1" />
-                        <div className="flex-1">
-                          <p className="font-semibold text-foreground">Home</p>
-                          <p className="text-sm text-muted-foreground">
-                            {userLocation.address}, New Delhi - 110001
-                          </p>
-                        </div>
-                        <Check className="w-5 h-5 text-primary" />
-                      </div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-dashed border-primary text-primary hover:bg-primary/10 font-medium py-6"
+                        onClick={() => setShowAddAddress(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Add New Address
+                      </Button>
                     </motion.div>
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="p-4 bg-muted rounded-xl hover:bg-muted/70 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-muted-foreground mt-1" />
-                        <div>
-                          <p className="font-semibold text-foreground">Office</p>
-                          <p className="text-sm text-muted-foreground">
-                            Cyber Hub, DLF Phase 2, Gurgaon - 122002
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                    <Button variant="outline" className="w-full border-dashed border-primary text-primary hover:bg-primary/10 font-medium">
-                      <Plus className="w-4 h-4 mr-2" /> Add New Address
-                    </Button>
                   </div>
+                )}
+
+                {checkoutStep === 1 && showAddAddress && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowAddAddress(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <ChevronRight className="w-4 h-4 rotate-180 mr-1" /> Back
+                      </Button>
+                      <h3 className="font-semibold text-foreground">Add New Address</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Address Type</label>
+                        <div className="flex gap-2">
+                          {["home", "office", "other"].map((type) => (
+                            <Button
+                              key={type}
+                              variant={newAddress.type === type ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setNewAddress(prev => ({ ...prev, type: type as "home" | "office" | "other" }))}
+                              className={newAddress.type === type ? "btn-primary-gradient" : "border-border text-foreground"}
+                            >
+                              {type === "home" && <Home className="w-4 h-4 mr-1" />}
+                              {type === "office" && <Building className="w-4 h-4 mr-1" />}
+                              {type === "other" && <MapPin className="w-4 h-4 mr-1" />}
+                              {type.charAt(0).toUpperCase() + type.slice(1)}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Label</label>
+                        <Input 
+                          placeholder="e.g., Mom's house, Work"
+                          value={newAddress.label}
+                          onChange={(e) => setNewAddress(prev => ({ ...prev, label: e.target.value }))}
+                          className="bg-muted border-border text-foreground"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Full Address</label>
+                        <Input 
+                          placeholder="House/Flat No, Street, Area, City"
+                          value={newAddress.address}
+                          onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
+                          className="bg-muted border-border text-foreground"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Pincode</label>
+                        <Input 
+                          placeholder="110001"
+                          value={newAddress.pincode}
+                          onChange={(e) => setNewAddress(prev => ({ ...prev, pincode: e.target.value }))}
+                          className="bg-muted border-border text-foreground"
+                          maxLength={6}
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={handleAddAddress}
+                        disabled={!newAddress.label || !newAddress.address || !newAddress.pincode}
+                        className="w-full btn-primary-gradient font-semibold py-6"
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Save Address
+                      </Button>
+                    </div>
+                  </motion.div>
                 )}
 
                 {checkoutStep === 2 && (
@@ -720,6 +862,12 @@ export default function OrderPage() {
                       </div>
                     ) : (
                       <>
+                        <div className="p-4 rounded-xl bg-muted/50 mb-4">
+                          <p className="text-sm text-muted-foreground mb-1">Delivering to</p>
+                          <p className="font-semibold text-foreground">{selectedAddress.label}</p>
+                          <p className="text-sm text-muted-foreground">{selectedAddress.address}</p>
+                        </div>
+
                         <motion.div 
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -727,7 +875,7 @@ export default function OrderPage() {
                           className={`p-4 rounded-xl cursor-pointer transition-all ${
                             paymentMethod === "online" 
                               ? "bg-primary/10 border-2 border-primary" 
-                              : "bg-muted hover:bg-muted/70"
+                              : "bg-muted hover:bg-muted/70 border-2 border-transparent"
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -747,7 +895,7 @@ export default function OrderPage() {
                           className={`p-4 rounded-xl cursor-pointer transition-all ${
                             paymentMethod === "cod" 
                               ? "bg-primary/10 border-2 border-primary" 
-                              : "bg-muted hover:bg-muted/70"
+                              : "bg-muted hover:bg-muted/70 border-2 border-transparent"
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -819,7 +967,7 @@ export default function OrderPage() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">To</p>
-                            <p className="font-medium text-foreground">{userLocation.address}</p>
+                            <p className="font-medium text-foreground">{selectedAddress.label} - {selectedAddress.address.split(',')[0]}</p>
                           </div>
                         </div>
                       </div>
@@ -834,7 +982,7 @@ export default function OrderPage() {
                 )}
               </ScrollArea>
 
-              {checkoutStep < 3 && cart.length > 0 && orderStatus === "idle" && (
+              {checkoutStep < 3 && cart.length > 0 && orderStatus === "idle" && !showAddAddress && (
                 <div className="p-6 border-t border-border bg-card">
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">

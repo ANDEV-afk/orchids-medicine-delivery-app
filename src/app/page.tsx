@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { 
   Truck, Clock, Shield, Store, ChevronRight, Search, MapPin, 
   Star, Zap, Brain, BadgeCheck, TrendingUp, Package, Plus, Heart,
-  Sparkles, Rocket, Users, Award
+  Sparkles, Rocket, Users, Award, ShoppingCart, Check
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { DoseuppLogo } from "@/components/DoseuppLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getPharmaciesWithDistances, type Pharmacy, subscribeToPharmacies } from "@/lib/pharmacy-store";
-import { getFeaturedMedicines, type Medicine } from "@/lib/medicines-store";
+import { getFeaturedMedicines, type Medicine, medicines } from "@/lib/medicines-store";
 
 const stats = [
   { value: "500+", label: "Partner Pharmacies", icon: Store },
@@ -71,6 +71,128 @@ function AnimatedSection({ children, className = "" }: { children: React.ReactNo
   );
 }
 
+function MobilePhoneAnimation() {
+  const [currentMedicine, setCurrentMedicine] = useState(0);
+  const [cartItems, setCartItems] = useState<number[]>([]);
+  const [showAddedToast, setShowAddedToast] = useState(false);
+  const demoMedicines = medicines.slice(0, 4);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMedicine(prev => {
+        const next = (prev + 1) % demoMedicines.length;
+        setCartItems(items => [...items, demoMedicines[next].id]);
+        setShowAddedToast(true);
+        setTimeout(() => setShowAddedToast(false), 1500);
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative mx-auto w-[280px] h-[560px]">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-[3rem] blur-2xl" />
+      <div className="relative w-full h-full bg-card border-4 border-border rounded-[2.5rem] overflow-hidden shadow-2xl">
+        <div className="h-8 bg-card border-b border-border flex items-center justify-center">
+          <div className="w-20 h-5 bg-muted rounded-full" />
+        </div>
+        
+        <div className="p-3 border-b border-border flex items-center justify-between bg-card">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <Package className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-sm text-foreground">Doseupp</span>
+          </div>
+          <div className="relative">
+            <ShoppingCart className="w-5 h-5 text-muted-foreground" />
+            <AnimatePresence>
+              {cartItems.length > 0 && (
+                <motion.span 
+                  key={cartItems.length}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 w-4 h-4 bg-accent text-white text-[10px] rounded-full flex items-center justify-center font-bold"
+                >
+                  {cartItems.length}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <div className="p-3 space-y-3 bg-background h-[calc(100%-6rem)] overflow-hidden">
+          <div className="bg-muted rounded-lg p-2 flex items-center gap-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Search medicines...</span>
+          </div>
+
+          <div className="space-y-2">
+            {demoMedicines.map((med, index) => (
+              <motion.div
+                key={med.id}
+                animate={{
+                  scale: currentMedicine === index ? 1.02 : 1,
+                  borderColor: currentMedicine === index ? "hsl(var(--primary))" : "hsl(var(--border))"
+                }}
+                className="bg-card rounded-xl p-2 border-2 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    <img src={med.image} alt={med.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-muted-foreground">{med.brand}</p>
+                    <p className="text-xs font-semibold text-foreground truncate">{med.name}</p>
+                    <p className="text-xs font-bold text-primary">₹{med.price}</p>
+                  </div>
+                  <motion.button
+                    animate={{
+                      backgroundColor: cartItems.includes(med.id) ? "hsl(var(--primary))" : "hsl(var(--muted))"
+                    }}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  >
+                    {cartItems.includes(med.id) ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : (
+                      <Plus className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </motion.button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {showAddedToast && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute bottom-20 left-3 right-3 bg-primary text-white p-3 rounded-xl flex items-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              <span className="text-xs font-medium">Added to cart!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="absolute bottom-3 left-3 right-3">
+          <motion.div
+            animate={{ scale: [1, 1.02, 1] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="bg-gradient-to-r from-primary to-accent text-white p-3 rounded-xl text-center"
+          >
+            <span className="text-xs font-bold">Checkout • ₹{cartItems.reduce((sum, id) => sum + (medicines.find(m => m.id === id)?.price || 0), 0)}</span>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [featuredMedicines, setFeaturedMedicines] = useState<Medicine[]>([]);
@@ -110,6 +232,11 @@ export default function Home() {
           
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            <Link href="/pharmacy/login">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary hidden sm:flex font-medium">
+                Login
+              </Button>
+            </Link>
             <Link href="/pharmacy/onboarding">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white hidden sm:flex font-medium">
                 <Store className="w-4 h-4 mr-2" />
@@ -131,67 +258,78 @@ export default function Home() {
         className="pt-32 pb-20 px-6"
       >
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-8"
-            >
-              <Rocket className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary font-medium">Ultrafast Medicine Delivery in Delhi NCR</span>
-            </motion.div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight text-foreground">
-              Your Health,{" "}
-              <span className="gradient-text">Delivered Fast</span>
-            </h1>
-            
-            <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-              AI-powered medicine delivery in under 12 minutes. 
-              From prescription to doorstep, we&apos;ve got you covered.
-            </p>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+              transition={{ duration: 0.6 }}
+              className="text-center lg:text-left"
             >
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input 
-                  placeholder="Search medicines, vitamins, health products..." 
-                  className="pl-12 pr-4 py-6 text-lg bg-card border-border rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Link href="/order">
-                <Button size="lg" className="px-10 py-6 btn-primary-gradient font-bold rounded-2xl text-lg">
-                  Get Started <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 mb-8"
+              >
+                <Rocket className="w-4 h-4 text-primary" />
+                <span className="text-sm text-primary font-medium">Ultrafast Medicine Delivery in Delhi NCR</span>
+              </motion.div>
+              
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight tracking-tight text-foreground">
+                Your Health,{" "}
+                <span className="gradient-text">Delivered Fast</span>
+              </h1>
+              
+              <p className="text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed">
+                AI-powered medicine delivery in under 12 minutes. 
+                From prescription to doorstep, we&apos;ve got you covered.
+              </p>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
+              >
+                <div className="relative w-full max-w-md">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search medicines, vitamins..." 
+                    className="pl-12 pr-4 py-6 text-lg bg-card border-border rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Link href="/order">
+                  <Button size="lg" className="px-10 py-6 btn-primary-gradient font-bold rounded-2xl text-lg">
+                    Get Started <ChevronRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </Link>
+              </motion.div>
             </motion.div>
-          </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="hidden lg:block"
+            >
+              <MobilePhoneAnimation />
+            </motion.div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16"
           >
             {stats.map((stat, i) => (
               <motion.div 
                 key={i} 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
+                transition={{ delay: 0.6 + i * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
                 className="glass-card rounded-2xl p-6 text-center card-hover"
               >
