@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   MapPin, Phone, Clock, Package, Truck, Store, 
   CheckCircle2, ChevronRight, User, MessageSquare,
-  Brain, Sparkles, Shield, Fingerprint, PartyPopper, X, Star, ShoppingCart
+  Brain, Sparkles, Shield, Fingerprint, PartyPopper, X, Star, ShoppingCart,
+  ChevronDown, ChevronUp
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -46,13 +47,60 @@ const getTrackingSteps = (isCOD: boolean) => [
   { id: isCOD ? 8 : 7, title: "Delivered", description: "Order delivered successfully", icon: PartyPopper, time: isCOD ? "2:42 PM" : "2:41 PM" },
 ];
 
-const rider = {
-  name: "Rahul Kumar",
-  phone: "+91 9876543211",
-  rating: 4.9,
-  deliveries: 1250,
-  vehicle: "Honda Activa",
-  image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+const riders = [
+  {
+    name: "Rahul Kumar",
+    phone: "+91 9876543211",
+    rating: 4.9,
+    deliveries: 1250,
+    vehicle: "Honda Activa",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+    areas: ["connaught", "cp", "janpath", "rajiv", "karol", "patel"],
+  },
+  {
+    name: "Sunita Verma",
+    phone: "+91 9876543222",
+    rating: 4.7,
+    deliveries: 980,
+    vehicle: "Hero Electric",
+    image: "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=100&h=100&fit=crop",
+    areas: ["gurgaon", "cyber", "dlf", "sushant", "mg road", "udaipur"],
+  },
+  {
+    name: "Amit Singh",
+    phone: "+91 9876543223",
+    rating: 4.8,
+    deliveries: 1120,
+    vehicle: "TVS Jupiter",
+    image: "https://images.unsplash.com/photo-1599566150163-29194dcabd36?w=100&h=100&fit=crop",
+    areas: ["noida", "sector 18", "sector-18", "ghaziabad", "vasundhara"],
+  },
+  {
+    name: "Priya Mehra",
+    phone: "+91 9876543224",
+    rating: 4.9,
+    deliveries: 1345,
+    vehicle: "Bajaj Chetak EV",
+    image: "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=100&h=100&fit=crop",
+    areas: ["saket", "hauz khas", "malviya", "vasant", "lajpat"],
+  },
+];
+
+const pickRiderForAddress = (
+  deliveryAddress?: string,
+  pharmacyAddress?: string,
+  pharmacyName?: string,
+  orderId?: string
+) => {
+  const text = `${deliveryAddress || ""} ${pharmacyAddress || ""} ${pharmacyName || ""}`.toLowerCase();
+  const matched = riders.find(r => r.areas.some(area => text.includes(area)));
+  if (matched) return matched;
+
+  // deterministic fallback so every order doesn't default to the first rider
+  const hashSource = orderId || deliveryAddress || pharmacyAddress || "default";
+  const hash = hashSource.split("").reduce((a, c) => ((a << 5) - a) + c.charCodeAt(0), 0);
+  const idx = Math.abs(hash) % riders.length;
+  return riders[idx];
 };
 
 function TrackContent() {
@@ -66,7 +114,9 @@ function TrackContent() {
   const [verifying, setVerifying] = useState(false);
   const [rating, setRating] = useState(0);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [assignedRider, setAssignedRider] = useState<typeof riders[number] | null>(null);
   const [hasOrder, setHasOrder] = useState<boolean | null>(null);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const correctOTP = "1234";
 
   const isCOD = orderData?.paymentMethod === "cod";
@@ -79,6 +129,9 @@ function TrackContent() {
       const parsed = JSON.parse(storedOrder);
       setOrderData(parsed);
       setHasOrder(true);
+      setAssignedRider(
+        pickRiderForAddress(parsed.deliveryAddress, parsed.pharmacy?.address, parsed.pharmacy?.name, parsed.orderId)
+      );
     } else {
       setHasOrder(false);
     }
@@ -136,6 +189,20 @@ function TrackContent() {
       return () => clearInterval(riderInterval);
     }
   }, [currentStep, isCOD, maxStep]);
+
+  // Resolve rider once order data becomes available (works for deep-link to /track?orderId=...)
+  useEffect(() => {
+    if (orderData && !assignedRider) {
+      setAssignedRider(
+        pickRiderForAddress(
+          orderData.deliveryAddress,
+          orderData.pharmacy?.address,
+          orderData.pharmacy?.name,
+          orderData.orderId
+        )
+      );
+    }
+  }, [orderData, assignedRider]);
 
   const handleOTPChange = (index: number, value: string) => {
     if (value.length > 1) return;
@@ -254,17 +321,17 @@ function TrackContent() {
         </div>
       </nav>
 
-      <div className="pt-28 pb-16 px-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="pt-24 pb-16 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-6"
           >
             <motion.div 
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-4"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-3"
             >
               <motion.div 
                 className="w-2.5 h-2.5 rounded-full bg-primary"
@@ -277,7 +344,7 @@ function TrackContent() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-3xl md:text-4xl font-bold mb-2 text-foreground"
+              className="text-2xl md:text-3xl font-bold mb-1 text-foreground"
             >
               Track Your Order
             </motion.h1>
@@ -285,36 +352,38 @@ function TrackContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-muted-foreground"
+              className="text-muted-foreground text-sm"
             >
               Order #{orderId}
             </motion.p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-5 gap-6">
+          <div className="grid lg:grid-cols-5 gap-5">
+            {/* Left Column - Map & Progress */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
-              className="lg:col-span-3 space-y-6"
+              className="lg:col-span-3 space-y-5"
             >
+              {/* Map Card */}
               <motion.div 
-                className="glass-card rounded-3xl overflow-hidden"
-                whileHover={{ scale: 1.01 }}
+                className="glass-card rounded-2xl overflow-hidden border border-border/50"
+                whileHover={{ scale: 1.005 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <div className="h-56 bg-gradient-to-br from-secondary/50 to-card relative overflow-hidden">
+                <div className="h-48 md:h-56 bg-gradient-to-br from-primary/5 via-secondary/30 to-accent/5 relative overflow-hidden">
                   <motion.div 
-                    className="absolute inset-0 opacity-30"
+                    className="absolute inset-0 opacity-40"
                     animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
                     transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
                   >
                     <div className="absolute inset-0" style={{
                       backgroundImage: `
-                        linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px)
+                        linear-gradient(rgba(37, 99, 235, 0.08) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(37, 99, 235, 0.08) 1px, transparent 1px)
                       `,
-                      backgroundSize: '30px 30px'
+                      backgroundSize: '25px 25px'
                     }} />
                   </motion.div>
                   
@@ -338,27 +407,25 @@ function TrackContent() {
                   </svg>
 
                   <motion.div
-                    className="absolute bottom-4 left-4 bg-accent backdrop-blur-sm px-3 py-2 rounded-xl"
+                    className="absolute bottom-3 left-3 bg-gradient-to-r from-orange-500 to-amber-500 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg"
                     initial={{ opacity: 0, scale: 0.8, x: -20 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     transition={{ delay: 0.5, type: "spring" }}
-                    whileHover={{ scale: 1.05 }}
                   >
-                    <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4 text-white" />
+                    <div className="flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-white" />
                       <span className="text-xs text-white font-medium">Pharmacy</span>
                     </div>
                   </motion.div>
                   
                   <motion.div
-                    className="absolute top-4 right-4 bg-primary backdrop-blur-sm px-3 py-2 rounded-xl"
+                    className="absolute top-3 right-3 bg-gradient-to-r from-primary to-blue-600 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg"
                     initial={{ opacity: 0, scale: 0.8, x: 20 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     transition={{ delay: 0.7, type: "spring" }}
-                    whileHover={{ scale: 1.05 }}
                   >
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-white" />
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-white" />
                       <span className="text-xs text-white font-medium">Your Location</span>
                     </div>
                   </motion.div>
@@ -378,16 +445,16 @@ function TrackContent() {
                       >
                         <motion.div
                           className="relative"
-                          animate={{ scale: [1, 1.2, 1] }}
+                          animate={{ scale: [1, 1.15, 1] }}
                           transition={{ repeat: Infinity, duration: 1.5 }}
                         >
                           <motion.div 
-                            className="absolute inset-0 bg-primary/30 rounded-full blur-md"
-                            animate={{ scale: [1, 1.5, 1] }}
+                            className="absolute inset-0 bg-primary/40 rounded-full blur-md"
+                            animate={{ scale: [1, 1.6, 1] }}
                             transition={{ repeat: Infinity, duration: 2 }}
                           />
-                          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg relative">
-                            <Truck className="w-5 h-5 text-white" />
+                          <div className="w-9 h-9 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-xl relative border-2 border-white/50">
+                            <Truck className="w-4 h-4 text-white" />
                           </div>
                         </motion.div>
                       </motion.div>
@@ -395,12 +462,12 @@ function TrackContent() {
                   </AnimatePresence>
                 </div>
                 
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-sm text-muted-foreground">Estimated Delivery</p>
+                      <p className="text-xs text-muted-foreground">Estimated Delivery</p>
                       <motion.p 
-                        className="text-2xl font-bold text-primary"
+                        className="text-xl font-bold text-primary"
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ repeat: Infinity, duration: 2 }}
                       >
@@ -408,16 +475,16 @@ function TrackContent() {
                       </motion.p>
                     </div>
                     <motion.div 
-                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center"
+                      className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center"
                       animate={{ rotate: [0, 5, -5, 0] }}
                       transition={{ repeat: Infinity, duration: 4 }}
                     >
-                      <Clock className="w-8 h-8 text-primary" />
+                      <Clock className="w-6 h-6 text-primary" />
                     </motion.div>
                   </div>
                   
-                  <div className="mb-2">
-                    <div className="flex justify-between text-sm mb-2">
+                  <div className="mb-3">
+                    <div className="flex justify-between text-xs mb-1.5">
                       <span className="text-muted-foreground">Delivery Progress</span>
                       <motion.span 
                         className="text-primary font-semibold"
@@ -428,7 +495,7 @@ function TrackContent() {
                         {progress}%
                       </motion.span>
                     </div>
-                    <div className="h-3 bg-muted rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                       <motion.div 
                         className="h-full rounded-full relative overflow-hidden"
                         style={{ background: "linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #2563eb 100%)", backgroundSize: "200% 100%" }}
@@ -439,133 +506,43 @@ function TrackContent() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border mt-4">
-                    <motion.div 
-                      className="flex items-center gap-3"
-                      whileHover={{ x: 4 }}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                        <Store className="w-5 h-5 text-accent" />
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center">
+                        <Store className="w-4 h-4 text-orange-500" />
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">From</p>
-                        <p className="font-medium text-sm line-clamp-1 text-foreground">{pharmacyName.split(' - ')[0]}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground">From</p>
+                        <p className="font-medium text-xs truncate text-foreground">{pharmacyName.split(' - ')[0]}</p>
                       </div>
-                    </motion.div>
-                    <motion.div 
-                      className="flex items-center gap-3"
-                      whileHover={{ x: 4 }}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                        <MapPin className="w-4 h-4 text-primary" />
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">To</p>
-                        <p className="font-medium text-sm line-clamp-1 text-foreground">{deliveryAddress.split(',')[0]}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground">To</p>
+                        <p className="font-medium text-xs truncate text-foreground">{deliveryAddress.split(',')[0]}</p>
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
 
-              <AnimatePresence>
-                {currentStep >= 5 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ type: "spring", damping: 20 }}
-                    className="glass-card rounded-2xl p-5"
-                  >
-                    <h3 className="font-bold mb-4 flex items-center gap-2 text-foreground">
-                      <motion.div
-                        animate={{ rotate: [0, 10, -10, 0] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                      >
-                        <Truck className="w-5 h-5 text-primary" />
-                      </motion.div>
-                      Delivery Partner
-                    </h3>
-                    <div className="flex items-center gap-4">
-                      <motion.div 
-                        className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                      >
-                        <img 
-                          src={rider.image} 
-                          alt={rider.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </motion.div>
-                      <div className="flex-1">
-                        <p className="font-bold text-foreground">{rider.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          ⭐ {rider.rating} • {rider.deliveries} deliveries
-                        </p>
-                        <p className="text-xs text-muted-foreground">{rider.vehicle}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
-                            <Phone className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary hover:text-white">
-                            <MessageSquare className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                      </div>
-                    </div>
-
-                    <AnimatePresence>
-                      {currentStep === 6 && isCOD && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/30 overflow-hidden"
-                        >
-                          <div className="flex items-center gap-3">
-                            <motion.div 
-                              className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center"
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ repeat: Infinity, duration: 1.5 }}
-                            >
-                              <Fingerprint className="w-5 h-5 text-primary" />
-                            </motion.div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-foreground">Verification OTP</p>
-                              <motion.p 
-                                className="text-2xl font-bold text-primary tracking-widest"
-                                animate={{ scale: [1, 1.05, 1] }}
-                                transition={{ repeat: Infinity, duration: 2 }}
-                              >
-                                1234
-                              </motion.p>
-                              <p className="text-xs text-muted-foreground">Share this OTP with rider at delivery</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-              className="lg:col-span-2 space-y-6"
-            >
+              {/* Order Progress - Now below map */}
               <motion.div 
-                className="glass-card rounded-2xl p-5"
-                whileHover={{ scale: 1.01 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="glass-card rounded-2xl p-4 border border-border/50"
               >
-                <h3 className="font-bold mb-4 text-foreground">Order Progress</h3>
-                <div className="space-y-1">
+                <h3 className="font-bold mb-3 text-foreground text-sm flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <Package className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  Order Progress
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
                   {trackingSteps.map((step, i) => {
                     const isCompleted = currentStep > step.id;
                     const isCurrent = currentStep === step.id;
@@ -576,131 +553,199 @@ function TrackContent() {
                         key={step.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.08 }}
-                        className="flex items-start gap-3"
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-2.5 py-2"
                       >
-                        <div className="relative flex flex-col items-center">
-                          <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ 
-                              scale: isCurrent ? [1, 1.1, 1] : (isCompleted ? 1 : 0.8),
-                            }}
-                            transition={{ 
-                              scale: isCurrent ? { repeat: Infinity, duration: 1.5 } : { duration: 0.3 }
-                            }}
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center z-10 ${
-                              isCompleted || isCurrent
-                                ? step.id === maxStep && isCompleted 
-                                  ? "bg-gradient-to-br from-green-500 to-emerald-500"
-                                  : "bg-gradient-to-br from-primary to-accent"
-                                : "bg-muted border border-border"
-                            }`}
-                          >
-                            <Icon className={`w-5 h-5 ${isCompleted || isCurrent ? "text-white" : "text-muted-foreground"}`} />
-                          </motion.div>
-                          {i < trackingSteps.length - 1 && (
-                            <motion.div 
-                              className={`w-0.5 h-6 ${isCompleted ? "bg-primary" : "bg-border"}`}
-                              initial={{ height: 0 }}
-                              animate={{ height: 24 }}
-                              transition={{ delay: i * 0.08 + 0.2 }}
-                            />
-                          )}
-                        </div>
-                        <div className="flex-1 pt-2 pb-2">
-                          <div className="flex items-center justify-between">
-                            <p className={`font-medium text-sm ${isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>{step.title}</p>
+                        <motion.div
+                          initial={{ scale: 0.8 }}
+                          animate={{ 
+                            scale: isCurrent ? [1, 1.1, 1] : (isCompleted ? 1 : 0.85),
+                          }}
+                          transition={{ 
+                            scale: isCurrent ? { repeat: Infinity, duration: 1.5 } : { duration: 0.3 }
+                          }}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            isCompleted || isCurrent
+                              ? step.id === maxStep && isCompleted 
+                                ? "bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25"
+                                : "bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25"
+                              : "bg-muted/80 border border-border/50"
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 ${isCompleted || isCurrent ? "text-white" : "text-muted-foreground"}`} />
+                        </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`font-medium text-xs truncate ${isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+                              {step.title}
+                            </p>
                             {(isCompleted || isCurrent) && step.time && (
-                              <motion.span 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-xs text-muted-foreground"
-                              >
-                                {step.time}
-                              </motion.span>
+                              <span className="text-[10px] text-muted-foreground flex-shrink-0">{step.time}</span>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">{step.description}</p>
-                          {isCurrent && step.id === 2 && (
-                            <motion.div 
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="ai-thinking mt-2 rounded-lg px-3 py-1.5 text-xs text-accent flex items-center gap-2"
-                            >
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                              >
-                                <Sparkles className="w-3 h-3" />
-                              </motion.div>
-                              AI analyzing pharmacies...
-                            </motion.div>
-                          )}
+                          <p className="text-[10px] text-muted-foreground truncate">{step.description}</p>
                         </div>
+                        {isCurrent && step.id === 2 && (
+                          <motion.div 
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                          >
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                              <Sparkles className="w-2.5 h-2.5 text-accent" />
+                            </motion.div>
+                            <span className="text-[9px] text-accent font-medium">AI</span>
+                          </motion.div>
+                        )}
                       </motion.div>
                     );
                   })}
                 </div>
               </motion.div>
+            </motion.div>
 
-              <motion.div 
-                className="glass-card rounded-2xl p-5"
+            {/* Right Column - Summary & Delivery Partner */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+              className="lg:col-span-2 space-y-5"
+            >
+              {/* Delivery Partner Card */}
+              <motion.div
+                className="glass-card rounded-2xl p-4 border border-border/50 bg-gradient-to-br from-primary/5 to-transparent"
                 whileHover={{ scale: 1.01 }}
               >
-                <h3 className="font-bold mb-4 text-foreground">Order Summary</h3>
-                <div className="space-y-3 mb-4">
-                  {orderItems.length > 0 ? (
-                    orderItems.map((item, i) => (
-                      <motion.div 
-                        key={i} 
-                        className="flex items-center gap-3"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        whileHover={{ x: 4 }}
-                      >
-                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.brand} × {item.quantity}</p>
-                        </div>
-                        <span className="font-semibold text-foreground">₹{item.price * item.quantity}</span>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground text-sm">
-                      <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      No order data available
-                    </div>
-                  )}
-                </div>
-                {orderItems.length > 0 && (
-                  <div className="space-y-2 pt-4 border-t border-border">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="text-foreground">₹{subtotal}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Delivery Fee</span>
-                      <span className="text-foreground">₹{deliveryFee}</span>
-                    </div>
-                    <motion.div 
-                      className="flex justify-between font-bold text-lg pt-2"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <span className="text-foreground">Total</span>
-                      <span className="text-primary">₹{total}</span>
+                <h3 className="font-bold mb-3 flex items-center gap-2 text-foreground text-sm">
+                  <div className="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <Truck className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  Delivery Partner
+                </h3>
+                <div className="flex items-center gap-3">
+                  <motion.div 
+                    className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 border-2 border-primary/20"
+                    whileHover={{ scale: 1.05, rotate: 2 }}
+                  >
+                    <img 
+                      src={assignedRider?.image || riders[0].image} 
+                      alt={assignedRider?.name || riders[0].name}
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-foreground text-sm">{assignedRider?.name || riders[0].name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-yellow-500">★</span> {assignedRider?.rating || riders[0].rating} • {assignedRider?.deliveries || riders[0].deliveries} deliveries
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{assignedRider?.vehicle || riders[0].vehicle}</p>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button size="sm" className="bg-green-500/15 text-green-600 hover:bg-green-500 hover:text-white h-8 w-8 p-0">
+                        <Phone className="w-3.5 h-3.5" />
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button size="sm" className="bg-primary/15 text-primary hover:bg-primary hover:text-white h-8 w-8 p-0">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </Button>
                     </motion.div>
                   </div>
-                )}
+                </div>
               </motion.div>
 
+              {/* Order Summary - Collapsible */}
+              <motion.div 
+                className="glass-card rounded-2xl border border-border/50 overflow-hidden"
+                whileHover={{ scale: 1.005 }}
+              >
+                <motion.button
+                  onClick={() => setSummaryExpanded(!summaryExpanded)}
+                  className="w-full p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-accent/15 flex items-center justify-center">
+                      <ShoppingCart className="w-3.5 h-3.5 text-accent" />
+                    </div>
+                    <h3 className="font-bold text-foreground text-sm">Order Summary</h3>
+                    <span className="text-xs text-muted-foreground">({orderItems.length} items)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-primary text-sm">₹{total}</span>
+                    <motion.div
+                      animate={{ rotate: summaryExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </motion.div>
+                  </div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {summaryExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 border-t border-border/50">
+                        <div className="space-y-2.5 pt-3 max-h-48 overflow-y-auto">
+                          {orderItems.length > 0 ? (
+                            orderItems.map((item, i) => (
+                              <motion.div 
+                                key={i} 
+                                className="flex items-center gap-2.5"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                              >
+                                <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-xs text-foreground truncate">{item.name}</p>
+                                  <p className="text-[10px] text-muted-foreground">{item.brand} × {item.quantity}</p>
+                                </div>
+                                <span className="font-semibold text-xs text-foreground">₹{item.price * item.quantity}</span>
+                              </motion.div>
+                            ))
+                          ) : (
+                            <div className="text-center py-3 text-muted-foreground text-xs">
+                              <Package className="w-6 h-6 mx-auto mb-1 opacity-50" />
+                              No order data
+                            </div>
+                          )}
+                        </div>
+                        {orderItems.length > 0 && (
+                          <div className="space-y-1.5 pt-3 mt-3 border-t border-border/50">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Subtotal</span>
+                              <span className="text-foreground">₹{subtotal}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Delivery Fee</span>
+                              <span className="text-foreground">₹{deliveryFee}</span>
+                            </div>
+                            <div className="flex justify-between font-bold text-sm pt-1.5">
+                              <span className="text-foreground">Total</span>
+                              <span className="text-primary">₹{total}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Order More Button */}
               <Link href="/order">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button className="w-full btn-primary-gradient font-bold py-5">
-                    Order More Medicines <ChevronRight className="w-5 h-5 ml-2" />
+                  <Button className="w-full btn-primary-gradient font-bold py-4 text-sm">
+                    Order More Medicines <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </motion.div>
               </Link>
