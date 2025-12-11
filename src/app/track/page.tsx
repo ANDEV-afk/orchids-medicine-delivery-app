@@ -180,13 +180,43 @@ function TrackContent() {
     setProgress(progressMap[currentStep] || 0);
 
     if (currentStep >= 6 && currentStep < maxStep) {
+      let isStopped = false;
+      let stopTimeout: NodeJS.Timeout | null = null;
+      
       const riderInterval = setInterval(() => {
-        setRiderLocation(prev => ({
-          x: Math.min(prev.x + 1.5, 85),
-          y: Math.max(prev.y - 1, 25),
-        }));
-      }, 150);
-      return () => clearInterval(riderInterval);
+        if (isStopped) return;
+        
+        setRiderLocation(prev => {
+          // Random chance to stop (simulating traffic, signals, etc.)
+          if (Math.random() < 0.15 && !isStopped) {
+            isStopped = true;
+            // Stop for 1-3 seconds
+            const stopDuration = 1000 + Math.random() * 2000;
+            stopTimeout = setTimeout(() => {
+              isStopped = false;
+            }, stopDuration);
+            return prev;
+          }
+          
+          // Variable speed - sometimes slower (traffic), sometimes faster (clear road)
+          const speedMultiplier = 0.5 + Math.random() * 1.5;
+          const baseSpeed = 1.5;
+          
+          // Add slight randomness to path (not perfectly straight)
+          const xJitter = (Math.random() - 0.5) * 0.3;
+          const yJitter = (Math.random() - 0.5) * 0.2;
+          
+          return {
+            x: Math.min(prev.x + (baseSpeed * speedMultiplier) + xJitter, 85),
+            y: Math.max(prev.y - (1 * speedMultiplier) + yJitter, 25),
+          };
+        });
+      }, 200);
+      
+      return () => {
+        clearInterval(riderInterval);
+        if (stopTimeout) clearTimeout(stopTimeout);
+      };
     }
   }, [currentStep, isCOD, maxStep]);
 
