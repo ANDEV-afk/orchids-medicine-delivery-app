@@ -136,7 +136,7 @@ function MobilePhoneAnimation() {
   }, []);
 
   return (
-    <div className="relative mx-auto w-[300px] h-[600px]">
+    <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[300px] h-[560px] sm:h-[600px]">
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-[3rem] blur-3xl"
         animate={{ 
@@ -705,7 +705,7 @@ export default function Home() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="hidden lg:block"
+              className="flex justify-center lg:justify-end"
             >
               <MobilePhoneAnimation />
             </motion.div>
